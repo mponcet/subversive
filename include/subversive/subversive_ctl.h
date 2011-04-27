@@ -11,6 +11,7 @@ enum {
 	HIDE_INODE = 0,
 	UNHIDE_INODE,
 	LULZ_MODE,
+	GET_ROOT,
 };
 
 #endif

