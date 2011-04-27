@@ -1,0 +1,51 @@
+**************************
+*** Subversive rootkit ***
+**************************
+
+ Subversive does not modify the syscall table but use debug registers to hook
+transparently system calls.
+
+-------------------------------------------------------------------------------
+LICENCE
+-------------------------------------------------------------------------------
+ GPLv2
+
+-------------------------------------------------------------------------------
+FEATURES
+-------------------------------------------------------------------------------
+
+ - architecture supported : amd64
+ - hide itself using debug registers
+ - hide files (getdents, getdents64)
+
+-------------------------------------------------------------------------------
+INSTALL
+-------------------------------------------------------------------------------
+ build and load the kernel module :
+  cd kernel
+  make
+  insmod subversive.ko
+
+
+ configure rootkit :
+  cd tools
+  ./subversive_ctl -h
+
+-------------------------------------------------------------------------------
+UNINSTALL
+-------------------------------------------------------------------------------
+ rmmod subversive
+
+-------------------------------------------------------------------------------
+REFERENCES
+-------------------------------------------------------------------------------
+
+ - IA32 Software Developers Manual Vol. 3B, Chapter 18
+ - Mistifying the debugger, Phrack 65, halfdead
+ - Abuso dell Hard Hardware nell Attaco al Kernel di Linux, AntiFork
+   Research, Pierre Falda
+
+-------------------------------------------------------------------------------
+CONTACT
+-------------------------------------------------------------------------------
+ falken@tuxfamily.org

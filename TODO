@@ -1,0 +1,13 @@
+-------------------------------------------------------------------------------
+TODO
+-------------------------------------------------------------------------------
+
+ - hook ia32 system call emulation
+ - debug register access emulation (GD bit)
+ - hide itself from module itself
+ - hide connections
+ - hide process
+ - sniffer
+ - backdoor
+ - covert channel
+ - and more...
