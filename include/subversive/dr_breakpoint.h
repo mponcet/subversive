@@ -33,32 +33,18 @@ enum bp_type {
  * DR7
  */
 
-#define DR0_TRAP_LOCAL (1 << 0)
-#define DR1_TRAP_LOCAL (1 << 2)
-#define DR2_TRAP_LOCAL (1 << 4)
-#define DR3_TRAP_LOCAL (1 << 6)
-
-#define DR0_TRAP_GLOBAL (1 << 1)
-#define DR1_TRAP_GLOBAL (1 << 3)
-#define DR2_TRAP_GLOBAL (1 << 5)
-#define DR3_TRAP_GLOBAL (1 << 7)
-
 #define DR_LE (1 << 8)
 #define DR_GE (1 << 9)
 #define DR_GD (1 << 13) 
 
-#define DR0_RW_OFF  16
-#define DR0_LEN_OFF 18
-#define DR1_RW_OFF  20
-#define DR1_LEN_OFF 22
-#define DR2_RW_OFF  24
-#define DR2_LEN_OFF 26
-#define DR3_RW_OFF  28
-#define DR3_LEN_OFF 30
-
 #define DR_RW_EXECUTE 0x0
 #define DR_RW_WRITE   0x1
 #define DR_RW_READ    0x3
+
+#define DR_LEN_1 0x0
+#define DR_LEN_2 0x1
+#define DR_LEN_4 0x3
+#define DR_LEN_8 0x2
 
 
 #define __set_dr(num, val) \
@@ -135,7 +121,7 @@ static inline void on_each_cpu_set_dr(unsigned char num, unsigned long val)
 	on_each_cpu(__on_each_cpu_set_dr, &dr, 0);
 }
 
-int register_dr_breakpoint(unsigned long addr, enum bp_type type, bp_handler handler);
+int register_dr_breakpoint(unsigned long addr, int type, int len, bp_handler handler);
 int unregister_dr_breakpoint(unsigned long addr);
 
 int patch_do_debug(void);

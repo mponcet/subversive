@@ -84,9 +84,16 @@ void restore_do_debug(void)
 	set_CR0_WP();
 }
 
-int register_dr_breakpoint(unsigned long addr, enum bp_type type, bp_handler handler)
+int register_dr_breakpoint(unsigned long addr, int type, int len, bp_handler handler)
 {
 	int i;
+	unsigned long dr7;
+	static int init = 0;
+
+	if (!init) {
+		memset(&bp, 0, sizeof(bp));
+		init = 1;
+	}
 
 	for (i = 0; i < 4; i++)
 		if (!bp.dr[i])
@@ -98,30 +105,12 @@ int register_dr_breakpoint(unsigned long addr, enum bp_type type, bp_handler han
 	bp.dr[i] = addr;
 	bp.handlers[i] = handler;
 
-	switch (i) {
-	case 0:
-		bp.dr7 |= DR0_TRAP_GLOBAL;
-		bp.dr7 &= ~(DR_RW_EXECUTE << DR0_RW_OFF);
-		bp.dr7 &= ~(0 << DR0_LEN_OFF);
-		break;
-	case 1:
-		bp.dr7 |= DR1_TRAP_GLOBAL;
-		bp.dr7 |= DR_RW_EXECUTE << DR1_RW_OFF;
-		bp.dr7 |= 0 << DR1_LEN_OFF;
-		break;
-	case 2:
-		bp.dr7 |= DR2_TRAP_GLOBAL;
-		bp.dr7 |= DR_RW_EXECUTE << DR2_RW_OFF;
-		bp.dr7 |= 0 << DR2_LEN_OFF;
-		break;
-	case 3:
-		bp.dr7 |= DR3_TRAP_GLOBAL;
-		bp.dr7 |= DR_RW_EXECUTE << DR3_RW_OFF;
-		bp.dr7 |= 0 << DR3_LEN_OFF;
-		break;
-	}
+	dr7 = (len | type) & 0xf;
+	dr7 <<= (16 + i * 4);
+	dr7 |= 0x2 << (i * 2);
+
 	/* bp.dr7 |= DR_GD; */
-	bp.dr7 |= DR_LE | DR_GE;
+	bp.dr7 |= dr7 | DR_LE | DR_GE;
 	on_each_cpu_set_dr(i, bp.dr[i]);
 	on_each_cpu_set_dr(7, bp.dr7);
 
@@ -139,20 +128,8 @@ int unregister_dr_bp(unsigned long addr)
 	if (i == 4)
 		return -1;
 
-	switch (i) {
-	case 0:
-		bp.dr7 &= ~DR0_TRAP_GLOBAL;
-		break;
-	case 1:
-		bp.dr7 &= ~DR1_TRAP_GLOBAL;
-		break;
-	case 2:
-		bp.dr7 &= ~DR2_TRAP_GLOBAL;
-		break;
-	case 3:
-		bp.dr7 &= ~DR3_TRAP_GLOBAL;
-		break;
-	}
+	/* disable global breakpoint */
+	bp.dr7 &= ~(0x2 << i * 2);
 	on_each_cpu_set_dr(i, bp.dr[i]);
 	on_each_cpu_set_dr(7, bp.dr7);
 
