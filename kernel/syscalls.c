@@ -9,10 +9,10 @@
 
 #include <anima/config.h>
 #include <anima/debug.h>
-#include <anima/hooks.h>
 #include <anima/ksyms.h>
 #include <anima/uaccess.h>
 #include <anima/structs.h>
+#include <anima/syscalls.h>
 #include <anima/anima_ctl.h>
 #include <anima/x86.h>
 

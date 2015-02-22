@@ -3,8 +3,8 @@
 
 #include <anima/config.h>
 #include <anima/debug.h>
-#include <anima/hooks.h>
 #include <anima/ksyms.h>
+#include <anima/syscalls.h>
 #include <anima/vfs.h>
 #include <anima/x86.h>
 
