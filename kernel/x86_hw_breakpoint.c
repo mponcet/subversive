@@ -9,6 +9,66 @@
 
 static struct dr_breakpoint bps;
 
+static void get_dr(unsigned char num, unsigned long *val)
+{
+	switch (num) {
+	case 0:
+		__get_dr(0, *val);
+		break;
+	case 1:
+		__get_dr(1, *val);
+		break;
+	case 2:
+		__get_dr(2, *val);
+		break;
+	case 3:
+		__get_dr(3, *val);
+		break;
+	case 6:
+		__get_dr(6, *val);
+		break;
+	case 7:
+		__get_dr(7, *val);
+		break;
+	}
+}
+
+static void set_dr(unsigned char num, unsigned long val)
+{
+	switch (num) {
+	case 0:
+		__set_dr(0, val);
+		break;
+	case 1:
+		__set_dr(1, val);
+		break;
+	case 2:
+		__set_dr(2, val);
+		break;
+	case 3:
+		__set_dr(3, val);
+		break;
+	case 6:
+		__set_dr(6, val);
+		break;
+	case 7:
+		__set_dr(7, val);
+		break;
+	}
+}
+
+static inline void __on_each_cpu_set_dr(void *data)
+{
+	unsigned long *dr = data;
+	set_dr(dr[0], dr[1]);
+}
+
+static inline void on_each_cpu_set_dr(unsigned char num, unsigned long val)
+{
+	unsigned long dr[2] = { num, val };
+	on_each_cpu(__on_each_cpu_set_dr, dr, 1);
+}
+
 static void emulate_mov_db(unsigned char op, unsigned int dr, unsigned long *reg)
 {
 	/*
@@ -505,6 +565,19 @@ static struct notifier_block hw_breakpoint_notifier_block = {
 /*
  * exported functions
  */
+void x86_hw_breakpoint_debug(void)
+{
+	unsigned long dr;
+
+	pr_debug("%s: debug registers state", __func__);
+	for (int i = 0; i <= 7; i++) {
+		if (i == 4 || i == 5)
+			continue;
+		get_dr(i, &dr);
+		pr_debug("\tdr%d=%lx", i, dr);
+	}
+}
+
 #include <linux/notifier.h>
 int x86_hw_breakpoint_init(void)
 {

@@ -12,8 +12,6 @@ struct syscall_stat sys_stats[NR_SYSCALLS] = { {0} };
 
 void debug_rk(u64 *inodes, pid_t *pids)
 {
-	unsigned long dr = 0;
-
 	pr_debug("%s: hidden inodes", __func__);
 	for (int i = 0; i < MAX_HIDDEN_INODES; i++)
 		if (inodes[i])
@@ -24,15 +22,7 @@ void debug_rk(u64 *inodes, pid_t *pids)
 		if (pids[i])
 			pr_debug("\tpid=%d", pids[i]);
 
-	/* architecture specific */
-	pr_debug("%s: debug registers state", __func__);
-	for (int i = 0; i <= 7; i++) {
-		if (i == 4 || i == 5)
-			continue;
-		get_dr(i, &dr);
-		pr_debug("\tdr%d=%lx", i, dr);
-	}
-
+	x86_hw_breakpoint_debug();
 }
 
 void debug_sys_stats(void)

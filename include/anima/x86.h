@@ -108,75 +108,12 @@ enum bp_type {
 #define __get_dr(num, val) \
         asm volatile("mov %%db" #num ",%0" : "=r" (val))
 
-static inline void get_dr(unsigned char num, unsigned long *val)
-{
-	switch (num) {
-	case 0:
-		__get_dr(0, *val);
-		break;
-	case 1:
-		__get_dr(1, *val);
-		break;
-	case 2:
-		__get_dr(2, *val);
-		break;
-	case 3:
-		__get_dr(3, *val);
-		break;
-	case 6:
-		__get_dr(6, *val);
-		break;
-	case 7:
-		__get_dr(7, *val);
-		break;
-	}
-}
-
-static inline void set_dr(unsigned char num, unsigned long val)
-{
-	switch (num) {
-	case 0:
-		__set_dr(0, val);
-		break;
-	case 1:
-		__set_dr(1, val);
-		break;
-	case 2:
-		__set_dr(2, val);
-		break;
-	case 3:
-		__set_dr(3, val);
-		break;
-	case 6:
-		__set_dr(6, val);
-		break;
-	case 7:
-		__set_dr(7, val);
-		break;
-	}
-}
-
 struct __debugreg {
 	unsigned char num;
 	unsigned long val;
 };
 
-static inline void __on_each_cpu_set_dr(void *data)
-{
-	struct __debugreg *dr = data;
-	set_dr(dr->num, dr->val);
-}
-
-static inline void on_each_cpu_set_dr(unsigned char num, unsigned long val)
-{
-	struct __debugreg dr = {
-		.num = num,
-		.val = val,
-	};
-
-	on_each_cpu(__on_each_cpu_set_dr, &dr, 1);
-}
-
+void x86_hw_breakpoint_debug(void);
 int x86_hw_breakpoint_init(void);
 int x86_hw_breakpoint_exit(void);
 int x86_hw_breakpoint_register(int dr, unsigned long addr, int type, int len, bp_handler handler);
