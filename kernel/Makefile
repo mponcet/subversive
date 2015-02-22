@@ -1,5 +1,5 @@
 obj-m += anima.o
-anima-objs := init.o debug.o ksyms.o syscalls.o vfs.o x86_hw_breakpoint.o x86_utils.o
+anima-objs := init.o debug.o ksyms.o libc.o syscalls.o vfs.o x86_hw_breakpoint.o x86_utils.o
 
 
 DIE_CHAIN = $(shell awk '/die_chain/ { print $$1 }' /boot/System.map-`uname -r`||echo 0)

