@@ -11,6 +11,8 @@ struct rootkit_config {
 #define RK_SHUTDOWN	2
 	int dr_protect;		/* DR access protection */
 	int patch_debug;	/* 1 => patch_debug, 0 => die_notifier */
+	int hook_syscall;
+	int hook_vfs;
 };
 extern struct rootkit_config rk_cfg;
 

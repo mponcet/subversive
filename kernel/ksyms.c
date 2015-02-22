@@ -1,3 +1,4 @@
+#include <linux/fs.h>
 #include <linux/kernel.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
@@ -106,6 +107,8 @@ int get_kernel_syms(void)
 	ksyms._copy_to_user = _copy_to_user;
 	ksyms.register_die_notifier = register_die_notifier;
 	ksyms.unregister_die_notifier = unregister_die_notifier;
+	ksyms.filp_open = (void *)filp_open;
+	ksyms.filp_close = (void *)filp_close;
 
 	return 0;
 }
