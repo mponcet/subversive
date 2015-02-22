@@ -73,8 +73,6 @@ struct kernel_syms {
 	void *die_chain;
 
 	/* kernel API */
-	int (*printk)(const char *, ...);
-	int (*vprintk)(const char *, va_list);
 	unsigned long (*_copy_from_user)(void *, const void *, unsigned int);
 	unsigned long (*_copy_to_user)(void *, const void *, unsigned int);
 	int (*register_die_notifier)(struct notifier_block *);

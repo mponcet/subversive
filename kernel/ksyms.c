@@ -101,8 +101,6 @@ int get_kernel_syms(void)
 	ksyms.die_chain = (void *)COMPILE_TIME_DIE_CHAIN;
 
 	/* kernel API */
-	ksyms.printk = printk;
-	ksyms.vprintk = vprintk;
 	ksyms._copy_from_user = _copy_from_user;
 	ksyms._copy_to_user = _copy_to_user;
 	ksyms.register_die_notifier = register_die_notifier;
