@@ -1,4 +1,5 @@
 #include <linux/fs.h>
+#include <linux/smp.h>
 #include <linux/kernel.h>
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
@@ -101,6 +102,7 @@ int get_kernel_syms(void)
 	ksyms.die_chain = (void *)COMPILE_TIME_DIE_CHAIN;
 
 	/* kernel API */
+	ksyms.on_each_cpu = on_each_cpu;
 	ksyms._copy_from_user = _copy_from_user;
 	ksyms._copy_to_user = _copy_to_user;
 	ksyms.register_die_notifier = register_die_notifier;

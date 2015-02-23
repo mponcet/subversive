@@ -66,7 +66,7 @@ static inline void __on_each_cpu_set_dr(void *data)
 static inline void on_each_cpu_set_dr(unsigned char num, unsigned long val)
 {
 	unsigned long dr[2] = { num, val };
-	on_each_cpu(__on_each_cpu_set_dr, dr, 1);
+	ksyms.on_each_cpu(__on_each_cpu_set_dr, dr, 1);
 }
 
 static void emulate_mov_db(unsigned char op, unsigned int dr, unsigned long *reg)
