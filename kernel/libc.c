@@ -19,6 +19,16 @@ void *anima_memset(void *s, int c, unsigned int n)
 	return s;
 }
 
+unsigned int anima_strlen(const char *s)
+{
+	unsigned int ret = 0;
+
+	while (*(s++))
+		ret++;
+
+	return ret;
+}
+
 int anima_strcmp(const char *s1, const char *s2)
 {
 	for (; *s1 == *s2; s1++, s2++)
