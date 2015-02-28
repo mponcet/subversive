@@ -85,6 +85,7 @@ struct kernel_syms {
 
 extern struct kernel_syms ksyms;
 
+unsigned long get_symbol_addr(const char *name);
 int get_kernel_syms(void);
 
 #endif

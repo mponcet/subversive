@@ -1,14 +1,43 @@
-#include <linux/fs.h>
-#include <linux/smp.h>
 #include <linux/kernel.h>
-#include <asm/uaccess.h>
+#include <linux/kallsyms.h>
 #include <asm/unistd.h>
 
 #include <anima/debug.h>
 #include <anima/ksyms.h>
+#include <anima/libc.h>
 #include <anima/x86.h>
 
 struct kernel_syms ksyms;
+
+struct ksym_lookup_struct {
+	const char *name;
+	unsigned long addr;
+};
+
+static int ksym_lookup(void *data, const char *name,
+			struct module *module, unsigned long addr)
+{
+	struct ksym_lookup_struct *kls = data;
+
+	kls->addr = 0;
+	if (!anima_strcmp(kls->name, name)) {
+		pr_debug("%s: %s=%lx\n", __func__, name, addr);
+		kls->addr = addr;
+		return 1;
+	}
+
+	return 0;
+}
+
+unsigned long get_symbol_addr(const char *name)
+{
+	struct ksym_lookup_struct kls;
+
+	kls.name = name;
+	kallsyms_on_each_symbol(ksym_lookup, &kls);
+
+	return kls.addr;
+}
 
 int get_kernel_syms(void)
 {
@@ -102,13 +131,15 @@ int get_kernel_syms(void)
 	ksyms.die_chain = (void *)COMPILE_TIME_DIE_CHAIN;
 
 	/* kernel API */
-	ksyms.on_each_cpu = on_each_cpu;
-	ksyms._copy_from_user = _copy_from_user;
-	ksyms._copy_to_user = _copy_to_user;
-	ksyms.register_die_notifier = register_die_notifier;
-	ksyms.unregister_die_notifier = unregister_die_notifier;
-	ksyms.filp_open = (void *)filp_open;
-	ksyms.filp_close = (void *)filp_close;
+	ksyms.on_each_cpu = (void *)get_symbol_addr("on_each_cpu");
+	ksyms._copy_from_user = (void *)get_symbol_addr("_copy_from_user");
+	ksyms._copy_to_user = (void *)get_symbol_addr("_copy_to_user");
+	ksyms.register_die_notifier =
+		(void *)get_symbol_addr("register_die_notifier");
+	ksyms.unregister_die_notifier =
+		(void *)get_symbol_addr("unregister_die_notifier");
+	ksyms.filp_open = (void *)get_symbol_addr("filp_open");
+	ksyms.filp_close = (void *)get_symbol_addr("filp_close");
 
 	return 0;
 }
