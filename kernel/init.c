@@ -12,10 +12,10 @@ MODULE_LICENSE("GPL");
 
 struct rootkit_config rk_cfg = {
 	.state = RK_BOOT,
-	.dr_protect = 0,
+	.dr_protect = 1,
 	.patch_debug = 1,
-	.hook_syscall = 1,
-	.hook_vfs = 1,
+	.hook_syscall = 0,
+	.hook_vfs = 0,
 };
 
 static int __init anima_init(void)

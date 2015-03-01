@@ -9,7 +9,7 @@
 
 static struct dr_breakpoint bps;
 
-static void get_dr(unsigned char num, unsigned long *val)
+static inline void get_dr(unsigned char num, unsigned long *val)
 {
 	switch (num) {
 	case 0:
@@ -33,7 +33,7 @@ static void get_dr(unsigned char num, unsigned long *val)
 	}
 }
 
-static void set_dr(unsigned char num, unsigned long val)
+static inline void set_dr(unsigned char num, unsigned long val)
 {
 	switch (num) {
 	case 0:
@@ -76,43 +76,37 @@ static void emulate_mov_db(unsigned char op, unsigned int dr, unsigned long *reg
 	 * set dr
 	 */
 	if (op == 0x23) { /* mov reg,drX */
-		if (rk_cfg.state == RK_SHUTDOWN || rk_cfg.state == RK_BOOT) {
-			set_dr(dr, *reg);
-		} else {
-			switch (dr) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-				if (!bps.dr[dr])
-					set_dr(dr, *reg);
-				break;
-			case 6:
-				set_dr(6, *reg);
-				break;
-			case 7:
-				set_dr(7, *reg);
-				break;
-			}
-		}
+		set_dr(dr, *reg);
+		/* FIXME
+		switch (dr) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+			if (!bps.dr[dr])
+				set_dr(dr, *reg);
+			break;
+		case 6:
+			set_dr(6, *reg);
+			break;
+		case 7:
+			set_dr(7, *reg);
+			break;
+		}*/
 	} else { /* mov drX,reg */
-		if (rk_cfg.state == RK_SHUTDOWN || rk_cfg.state == RK_BOOT) {
-			get_dr(dr, reg);
-		} else {
-			switch (dr) {
-			case 0:
-			case 1:
-			case 2:
-			case 3:
-				*reg = bps.old_dr[dr];
-				break;
-			case 6:
-				*reg = bps.old_dr6;
-				break;
-			case 7:
-				*reg = bps.old_dr7;
-				break;
-			}
+		switch (dr) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+			*reg = bps.old_dr[dr];
+			break;
+		case 6:
+			*reg = bps.old_dr6;
+			break;
+		case 7:
+			*reg = bps.old_dr7;
+			break;
 		}
 	}
 }
@@ -127,7 +121,7 @@ static int emulate_cpu(struct pt_regs *regs)
 	op2 = *(unsigned char *)(regs->ip + 2);
 	op3 = *(unsigned char *)(regs->ip + 3);
 
-	pr_debug("%s: op0=%x op1=%x op2=%x op3=%x", __func__, op0, op1, op2, op3);
+	pr_debug("%s: op0=%x op1=%x op2=%x op3=%x\n", __func__, op0, op1, op2, op3);
 
 	if (op0 == 0x0f && (op1 == 0x23 || op1 == 0x21)) {
 		switch (op2) {
@@ -443,7 +437,7 @@ static int emulate_cpu(struct pt_regs *regs)
 		}
 		regs->ip += 4;
 	} else {
-		pr_debug("%s: unknown opcode", __func__);
+		pr_debug("%s: unknown opcode\n", __func__);
 		return 1;
 	}
 
@@ -452,23 +446,11 @@ static int emulate_cpu(struct pt_regs *regs)
 
 static int hw_breakpoint_handler(struct pt_regs *regs, unsigned long dr6)
 {
-	int ret = 1;
-
-	/* single step */
-	if (dr6 & DR_BS)
-		return ret;
-
-	/* dr6 may not be cleared */
-	set_dr(6, 0UL);
-	/* disable breakpoints */
-	set_dr(7, 0UL);
-
 	if (dr6 & DR_BD) {
-		dr6 &= ~DR_BD;
-		if (rk_cfg.state == RK_SHUTDOWN && rk_cfg.dr_protect)
-			bps.dr7 &= ~DR_GD;
+		pr_debug("%s: rip=%lx\n", __func__, regs->ip);
 		emulate_cpu(regs);
-		ret = 0;
+		regs->flags |= X86_EFLAGS_RF;
+		return 0;
 	}
 
 	for (int i = 0; i < 4; i++) {
@@ -476,11 +458,12 @@ static int hw_breakpoint_handler(struct pt_regs *regs, unsigned long dr6)
 			bps.handlers[i](regs);
 			/* FIXME: RF only if exec breakpoint */
 			regs->flags |= X86_EFLAGS_RF;
-			ret = 0;
+			return 0;
 		}
 	}
 
-	return ret;
+	/* breakpoint not handled */
+	return 1;
 }
 
 static int hw_breakpoint_notify(struct notifier_block *self, unsigned long val, void *data)
@@ -491,13 +474,15 @@ static int hw_breakpoint_notify(struct notifier_block *self, unsigned long val, 
 	struct pt_regs *regs = args->regs;
 
 	if (val != DIE_DEBUG)
-		return NOTIFY_DONE; /* FIXME: NOTIFY_OK ? */
+		return NOTIFY_DONE;
 
 	dr6 = *(unsigned long *)ERR_PTR(args->err);
+	set_dr(6, 0UL);
+	set_dr(7, 0UL);
 	ret = hw_breakpoint_handler(regs, dr6);
 	set_dr(7, bps.dr7);
 	if (ret)
-		return NOTIFY_DONE; /* FIXME: NOTIFY_OK */
+		return NOTIFY_DONE;
 	else
 		return NOTIFY_STOP;
 }
@@ -507,7 +492,11 @@ static void new_do_debug(struct pt_regs *regs, long error_code)
 	int ret;
 	unsigned long dr6;
 
+	/* FIXME: check error_code */
+
+	//set_dr(7, 0UL);
 	get_dr(6, &dr6);
+	set_dr(6, 0UL);
 	ret = hw_breakpoint_handler(regs, dr6);
 	if (ret)
 		ksyms.old_do_debug(regs, error_code);
@@ -569,12 +558,12 @@ void x86_hw_breakpoint_debug(void)
 {
 	unsigned long dr;
 
-	pr_debug("%s: debug registers state", __func__);
+	pr_debug("%s: debug registers state\n", __func__);
 	for (int i = 0; i <= 7; i++) {
 		if (i == 4 || i == 5)
 			continue;
 		get_dr(i, &dr);
-		pr_debug("\tdr%d=%lx", i, dr);
+		pr_debug("\tdr%d=%lx\n", i, dr);
 	}
 }
 
@@ -589,7 +578,7 @@ int x86_hw_breakpoint_init(void)
 	get_dr(6, &bps.old_dr6);
 	get_dr(7, &bps.old_dr7);
 
-	pr_debug("%s: dr0=%lx dr1=%lx dr2=%lx dr3=%lx dr6=%lx dr7=%lx",
+	pr_debug("%s: dr0=%lx dr1=%lx dr2=%lx dr3=%lx dr6=%lx dr7=%lx\n",
 		 __func__, bps.old_dr[0], bps.old_dr[1], bps.old_dr[2],
 		 bps.old_dr[3], bps.old_dr6, bps.old_dr7);
 
@@ -655,7 +644,7 @@ int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 	bps.dr7 |= bps.dr7 | dr7 | DR_GE;
 	if (rk_cfg.dr_protect)
 		bps.dr7 |= DR_GD;
-	pr_debug("%s: dr%d=0x%lx dr7=%lx", __func__, dr_nr, addr, bps.dr7);
+	pr_debug("%s: dr%d=0x%lx dr7=%lx\n", __func__, dr_nr, addr, bps.dr7);
 	on_each_cpu_set_dr(dr_nr, bps.dr[dr_nr]);
 	on_each_cpu_set_dr(7, bps.dr7);
 
@@ -673,7 +662,7 @@ int x86_hw_breakpoint_unregister(int dr_nr)
 	bps.dr[dr_nr] = 0;
 	/* disable global breakpoint */
 	bps.dr7 &= ~(0x2 << dr_nr * 2);
-	pr_debug("%s: dr%d=0x%lx dr7=%lx", __func__, dr_nr, bps.dr[dr_nr], bps.dr7);
+	pr_debug("%s: dr%d=0x%lx dr7=%lx\n", __func__, dr_nr, bps.dr[dr_nr], bps.dr7);
 	on_each_cpu_set_dr(dr_nr, bps.dr[dr_nr]);
 	on_each_cpu_set_dr(7, bps.dr7);
 
