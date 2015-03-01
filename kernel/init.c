@@ -22,7 +22,7 @@ static int __init anima_init(void)
 {
 	int ret;
 
-	pr_debug("%s: init", __func__);
+	pr_debug("%s: init\n", __func__);
 
 	/* MUST be called first */
 	ret = get_kernel_syms();
@@ -48,7 +48,7 @@ static void __exit anima_exit(void)
 {
 	rk_cfg.state = RK_SHUTDOWN;
 
-	pr_debug("%s: exit", __func__);
+	pr_debug("%s: exit\n", __func__);
 
 	/* architecture specific */
 	x86_hw_breakpoint_exit();

