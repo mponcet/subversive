@@ -40,8 +40,39 @@ int anima_strcmp(const char *s1, const char *s2)
 
 int anima_strncmp(const char *s1, const char *s2, unsigned int n)
 {
-	while (n--)
-		if (*(s1++) != *(s2++))
-			return *(s1 - 1) - *(s2 - 1);
-	return 0;
+	unsigned char c1 = '\0';
+	unsigned char c2 = '\0';
+
+	if (n >= 4) {
+		unsigned int n4 = n >> 2;
+		do {
+			c1 = (unsigned char) *s1++;
+			c2 = (unsigned char) *s2++;
+			if (c1 == '\0' || c1 != c2)
+				return c1 - c2;
+			c1 = (unsigned char) *s1++;
+			c2 = (unsigned char) *s2++;
+			if (c1 == '\0' || c1 != c2)
+				return c1 - c2;
+			c1 = (unsigned char) *s1++;
+			c2 = (unsigned char) *s2++;
+			if (c1 == '\0' || c1 != c2)
+				return c1 - c2;
+			c1 = (unsigned char) *s1++;
+			c2 = (unsigned char) *s2++;
+			if (c1 == '\0' || c1 != c2)
+				return c1 - c2;
+		} while (--n4 > 0);
+		n &= 3;
+	}
+
+	while (n > 0) {
+		c1 = (unsigned char) *s1++;
+		c2 = (unsigned char) *s2++;
+		if (c1 == '\0' || c1 != c2)
+			return c1 - c2;
+		n--;
+	}
+
+	return c1 - c2;
 }
