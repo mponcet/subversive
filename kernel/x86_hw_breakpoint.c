@@ -449,7 +449,7 @@ static int hw_breakpoint_handler(struct pt_regs *regs, unsigned long dr6)
 	if (dr6 & DR_BD) {
 		pr_debug("%s: rip=%lx\n", __func__, regs->ip);
 		emulate_cpu(regs);
-		regs->flags |= X86_EFLAGS_RF;
+		pr_debug("%s: new_ip=%lx\n", __func__, regs->ip);
 		return 0;
 	}
 
@@ -476,11 +476,13 @@ static int hw_breakpoint_notify(struct notifier_block *self, unsigned long val, 
 	if (val != DIE_DEBUG)
 		return NOTIFY_DONE;
 
+	/* clear dr7 to prevent debug exceptions */
+	set_dr(7, 0);
+
+	/* dr6 cleared by do_debug (see traps.c) */
 	dr6 = *(unsigned long *)ERR_PTR(args->err);
-	set_dr(6, 0UL);
-	set_dr(7, 0UL);
 	ret = hw_breakpoint_handler(regs, dr6);
-	set_dr(7, bps.dr7);
+	__set_dr(7, bps.dr7);
 	if (ret)
 		return NOTIFY_DONE;
 	else
@@ -494,7 +496,9 @@ static void new_do_debug(struct pt_regs *regs, long error_code)
 
 	/* FIXME: check error_code */
 
-	//set_dr(7, 0UL);
+	/* clear dr7 to prevent debug exceptions */
+	set_dr(7, 0);
+
 	get_dr(6, &dr6);
 	set_dr(6, 0UL);
 	ret = hw_breakpoint_handler(regs, dr6);

