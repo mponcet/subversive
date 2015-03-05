@@ -38,6 +38,8 @@ static int __init anima_init(void)
 		hook_sys_call_table();
 	if (rk_cfg.hook_vfs)
 		hook_vfs();
+	if (rk_cfg.dr_protect)
+		x86_hw_breakpoint_protect_enable();
 
 	rk_cfg.state = RK_ACTIVE;
 
@@ -47,6 +49,8 @@ static int __init anima_init(void)
 static void __exit anima_exit(void)
 {
 	rk_cfg.state = RK_SHUTDOWN;
+	if (rk_cfg.dr_protect)
+		x86_hw_breakpoint_protect_disable();
 
 	pr_debug("%s: exit\n", __func__);
 

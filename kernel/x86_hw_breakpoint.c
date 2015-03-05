@@ -646,8 +646,6 @@ int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 	dr7 <<= (16 + dr_nr * 4);	/* len and type */
 	dr7 |= 0x2 << (dr_nr * 2);	/* global breakpoint */
 	bps.dr7 |= bps.dr7 | dr7 | DR_GE;
-	if (rk_cfg.dr_protect)
-		bps.dr7 |= DR_GD;
 	pr_debug("%s: dr%d=0x%lx dr7=%lx\n", __func__, dr_nr, addr, bps.dr7);
 	on_each_cpu_set_dr(dr_nr, bps.dr[dr_nr]);
 	on_each_cpu_set_dr(7, bps.dr7);
@@ -671,4 +669,16 @@ int x86_hw_breakpoint_unregister(int dr_nr)
 	on_each_cpu_set_dr(7, bps.dr7);
 
 	return 0;
+}
+
+void x86_hw_breakpoint_protect_enable(void)
+{
+	bps.dr7 |= DR_GD;
+	on_each_cpu_set_dr(7, bps.dr7);
+}
+
+void x86_hw_breakpoint_protect_disable(void)
+{
+	bps.dr7 &= ~DR_GD;
+	on_each_cpu_set_dr(7, bps.dr7);
 }

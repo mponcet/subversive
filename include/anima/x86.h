@@ -118,5 +118,7 @@ int x86_hw_breakpoint_init(void);
 int x86_hw_breakpoint_exit(void);
 int x86_hw_breakpoint_register(int dr, unsigned long addr, int type, int len, bp_handler handler);
 int x86_hw_breakpoint_unregister(int dr);
+void x86_hw_breakpoint_protect_enable(void);
+void x86_hw_breakpoint_protect_disable(void);
 
 #endif
