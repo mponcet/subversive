@@ -446,7 +446,7 @@ static int emulate_cpu(struct pt_regs *regs)
 
 static int hw_breakpoint_handler(struct pt_regs *regs, unsigned long dr6)
 {
-	if (dr6 & DR_BD) {
+	if (dr6 & DR6_BD) {
 		pr_debug("%s: rip=%lx\n", __func__, regs->ip);
 		emulate_cpu(regs);
 		pr_debug("%s: new_ip=%lx\n", __func__, regs->ip);
@@ -454,7 +454,7 @@ static int hw_breakpoint_handler(struct pt_regs *regs, unsigned long dr6)
 	}
 
 	for (int i = 0; i < 4; i++) {
-		if ((dr6 & (DR_TRAP0 << i)) && bps.handlers[i]) {
+		if ((dr6 & (DR6_TRAP0 << i)) && bps.handlers[i]) {
 			bps.handlers[i](regs);
 			/* FIXME: RF only if exec breakpoint */
 			regs->flags |= X86_EFLAGS_RF;
@@ -645,7 +645,7 @@ int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 	dr7 = (len | type) & 0xf;
 	dr7 <<= (16 + dr_nr * 4);	/* len and type */
 	dr7 |= 0x2 << (dr_nr * 2);	/* global breakpoint */
-	bps.dr7 |= bps.dr7 | dr7 | DR_GE;
+	bps.dr7 |= bps.dr7 | dr7 | DR7_GE;
 	pr_debug("%s: dr%d=0x%lx dr7=%lx\n", __func__, dr_nr, addr, bps.dr7);
 	on_each_cpu_set_dr(dr_nr, bps.dr[dr_nr]);
 	on_each_cpu_set_dr(7, bps.dr7);
@@ -673,12 +673,12 @@ int x86_hw_breakpoint_unregister(int dr_nr)
 
 void x86_hw_breakpoint_protect_enable(void)
 {
-	bps.dr7 |= DR_GD;
+	bps.dr7 |= DR7_GD;
 	on_each_cpu_set_dr(7, bps.dr7);
 }
 
 void x86_hw_breakpoint_protect_disable(void)
 {
-	bps.dr7 &= ~DR_GD;
+	bps.dr7 &= ~DR7_GD;
 	on_each_cpu_set_dr(7, bps.dr7);
 }

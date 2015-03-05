@@ -78,21 +78,21 @@ enum bp_type {
 /*
  * DR6
  */
-#define DR_TRAP0 (1 << 0)
-#define DR_TRAP1 (1 << 1)
-#define DR_TRAP2 (1 << 2)
-#define DR_TRAP3 (1 << 3)
-#define DR_BD	 (1 << 13)
-#define DR_BS	 (1 << 14)
-#define DR_BT	 (1 << 15)
+#define DR6_TRAP0 (1 << 0)
+#define DR6_TRAP1 (1 << 1)
+#define DR6_TRAP2 (1 << 2)
+#define DR6_TRAP3 (1 << 3)
+#define DR6_BD	 (1 << 13)
+#define DR6_BS	 (1 << 14)
+#define DR6_BT	 (1 << 15)
 
 
 /*
  * DR7
  */
-#define DR_LE (1 << 8)
-#define DR_GE (1 << 9)
-#define DR_GD (1 << 13)
+#define DR7_LE (1 << 8)
+#define DR7_GE (1 << 9)
+#define DR7_GD (1 << 13)
 
 #define DR_RW_EXECUTE 0x0
 #define DR_RW_WRITE   0x1
