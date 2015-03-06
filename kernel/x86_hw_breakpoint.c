@@ -9,7 +9,8 @@
 
 static struct dr_breakpoint bps;
 
-static inline void get_dr(unsigned char num, unsigned long *val)
+static void
+noinline get_dr(unsigned char num, unsigned long *val)
 {
 	switch (num) {
 	case 0:
@@ -33,7 +34,8 @@ static inline void get_dr(unsigned char num, unsigned long *val)
 	}
 }
 
-static inline void set_dr(unsigned char num, unsigned long val)
+static void
+noinline set_dr(unsigned char num, unsigned long val)
 {
 	switch (num) {
 	case 0:
@@ -69,50 +71,41 @@ static inline void on_each_cpu_set_dr(unsigned char num, unsigned long val)
 	ksyms.on_each_cpu(__on_each_cpu_set_dr, dr, 1);
 }
 
-static void emulate_mov_db(unsigned char op, unsigned int dr, unsigned long *reg)
+static void emulate_mov_db(int access_ok, unsigned char op,
+			   unsigned int dr, unsigned long *reg)
 {
-	/*
-	 * FIXME : get_dr mostly done, but should handle other kernel path trying to
-	 * set dr
-	 */
+	pr_debug("%s: op=%s access_ok=%d\n",
+			__func__, op == 0x23 ? "set" : "get", access_ok);
+
 	if (op == 0x23) { /* mov reg,drX */
-		set_dr(dr, *reg);
-		/* FIXME
-		switch (dr) {
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-			if (!bps.dr[dr])
+		if (access_ok) {
+			set_dr(dr, *reg);
+		} else {
+			/* prevent overwriting already set debug registers */
+			if (dr >= 0 && dr <= 3 && !bps.dr[dr])
 				set_dr(dr, *reg);
-			break;
-		case 6:
-			set_dr(6, *reg);
-			break;
-		case 7:
-			set_dr(7, *reg);
-			break;
-		}*/
+			else if (dr == 6)
+				set_dr(dr, *reg);
+			else if (dr == 7)
+				;
+		}
 	} else { /* mov drX,reg */
-		switch (dr) {
-		case 0:
-		case 1:
-		case 2:
-		case 3:
-			*reg = bps.old_dr[dr];
-			break;
-		case 6:
-			*reg = bps.old_dr6;
-			break;
-		case 7:
-			*reg = bps.old_dr7;
-			break;
+		if (access_ok) {
+			get_dr(dr, reg);
+		} else {
+			if (dr >= 0 && dr <= 3)
+				*reg = bps.old_dr[dr];
+			else if (dr == 6)
+				*reg = bps.old_dr6;
+			else if (dr == 7)
+				*reg = bps.old_dr7;
 		}
 	}
 }
 
 static int emulate_cpu(struct pt_regs *regs)
 {
+	int access_ok = 0;
 	/* op3 is x86_64 specific : mov dbX,r9-15 */
 	unsigned char op0, op1, op2, op3;
 
@@ -121,164 +114,176 @@ static int emulate_cpu(struct pt_regs *regs)
 	op2 = *(unsigned char *)(regs->ip + 2);
 	op3 = *(unsigned char *)(regs->ip + 3);
 
-	pr_debug("%s: op0=%x op1=%x op2=%x op3=%x\n", __func__, op0, op1, op2, op3);
+	pr_debug("%s: op0=%x op1=%x op2=%x op3=%x\n",
+			__func__, op0, op1, op2, op3);
+
+	/*
+	 * set_dr and get_dr are the only function
+	 * allowed to access debug registers
+	 */
+	if (regs->ip >= (unsigned long)set_dr
+	    && regs->ip < ((unsigned long)set_dr + 256))
+		access_ok = 1;
+	else if (regs->ip >= (unsigned long)get_dr
+	    && regs->ip < ((unsigned long)get_dr + 256))
+		access_ok = 1;
 
 	if (op0 == 0x0f && (op1 == 0x23 || op1 == 0x21)) {
 		switch (op2) {
 		/* db0 handling */
 		case 0xc0:
-			emulate_mov_db(op1, 0, &regs->ax);
+			emulate_mov_db(access_ok, op1, 0, &regs->ax);
 			break;
 		case 0xc3:
-			emulate_mov_db(op1, 0, &regs->bx);
+			emulate_mov_db(access_ok, op1, 0, &regs->bx);
 			break;
 		case 0xc1:
-			emulate_mov_db(op1, 0, &regs->cx);
+			emulate_mov_db(access_ok, op1, 0, &regs->cx);
 			break;
 		case 0xc2:
-			emulate_mov_db(op1, 0, &regs->dx);
+			emulate_mov_db(access_ok, op1, 0, &regs->dx);
 			break;
 		case 0xc7:
-			emulate_mov_db(op1, 0, &regs->di);
+			emulate_mov_db(access_ok, op1, 0, &regs->di);
 			break;
 		case 0xc6:
-			emulate_mov_db(op1, 0, &regs->si);
+			emulate_mov_db(access_ok, op1, 0, &regs->si);
 			break;
 		case 0xc4:
-			emulate_mov_db(op1, 0, &regs->sp);
+			emulate_mov_db(access_ok, op1, 0, &regs->sp);
 			break;
 		case 0xc5:
-			emulate_mov_db(op1, 0, &regs->bp);
+			emulate_mov_db(access_ok, op1, 0, &regs->bp);
 			break;
 
 		/* db1 handling */
 		case 0xc8:
-			emulate_mov_db(op1, 1, &regs->ax);
+			emulate_mov_db(access_ok, op1, 1, &regs->ax);
 			break;
 		case 0xcb:
-			emulate_mov_db(op1, 1, &regs->bx);
+			emulate_mov_db(access_ok, op1, 1, &regs->bx);
 			break;
 		case 0xc9:
-			emulate_mov_db(op1, 1, &regs->cx);
+			emulate_mov_db(access_ok, op1, 1, &regs->cx);
 			break;
 		case 0xca:
-			emulate_mov_db(op1, 1, &regs->dx);
+			emulate_mov_db(access_ok, op1, 1, &regs->dx);
 			break;
 		case 0xcf:
-			emulate_mov_db(op1, 1, &regs->di);
+			emulate_mov_db(access_ok, op1, 1, &regs->di);
 			break;
 		case 0xce:
-			emulate_mov_db(op1, 1, &regs->si);
+			emulate_mov_db(access_ok, op1, 1, &regs->si);
 			break;
 		case 0xcc:
-			emulate_mov_db(op1, 1, &regs->sp);
+			emulate_mov_db(access_ok, op1, 1, &regs->sp);
 			break;
 		case 0xcd:
-			emulate_mov_db(op1, 1, &regs->bp);
+			emulate_mov_db(access_ok, op1, 1, &regs->bp);
 			break;
 
 		/* db2 handling */
 		case 0xd0:
-			emulate_mov_db(op1, 2, &regs->ax);
+			emulate_mov_db(access_ok, op1, 2, &regs->ax);
 			break;
 		case 0xd3:
-			emulate_mov_db(op1, 2, &regs->bx);
+			emulate_mov_db(access_ok, op1, 2, &regs->bx);
 			break;
 		case 0xd1:
-			emulate_mov_db(op1, 2, &regs->cx);
+			emulate_mov_db(access_ok, op1, 2, &regs->cx);
 			break;
 		case 0xd2:
-			emulate_mov_db(op1, 2, &regs->dx);
+			emulate_mov_db(access_ok, op1, 2, &regs->dx);
 			break;
 		case 0xd7:
-			emulate_mov_db(op1, 2, &regs->di);
+			emulate_mov_db(access_ok, op1, 2, &regs->di);
 			break;
 		case 0xd6:
-			emulate_mov_db(op1, 2, &regs->si);
+			emulate_mov_db(access_ok, op1, 2, &regs->si);
 			break;
 		case 0xd4:
-			emulate_mov_db(op1, 2, &regs->sp);
+			emulate_mov_db(access_ok, op1, 2, &regs->sp);
 			break;
 		case 0xd5:
-			emulate_mov_db(op1, 2, &regs->bp);
+			emulate_mov_db(access_ok, op1, 2, &regs->bp);
 			break;
 
 		/* db3 handling */
 		case 0xd8:
-			emulate_mov_db(op1, 3, &regs->ax);
+			emulate_mov_db(access_ok, op1, 3, &regs->ax);
 			break;
 		case 0xdb:
-			emulate_mov_db(op1, 3, &regs->bx);
+			emulate_mov_db(access_ok, op1, 3, &regs->bx);
 			break;
 		case 0xd9:
-			emulate_mov_db(op1, 3, &regs->cx);
+			emulate_mov_db(access_ok, op1, 3, &regs->cx);
 			break;
 		case 0xda:
-			emulate_mov_db(op1, 3, &regs->dx);
+			emulate_mov_db(access_ok, op1, 3, &regs->dx);
 			break;
 		case 0xdf:
-			emulate_mov_db(op1, 3, &regs->di);
+			emulate_mov_db(access_ok, op1, 3, &regs->di);
 			break;
 		case 0xde:
-			emulate_mov_db(op1, 3, &regs->si);
+			emulate_mov_db(access_ok, op1, 3, &regs->si);
 			break;
 		case 0xdc:
-			emulate_mov_db(op1, 3, &regs->sp);
+			emulate_mov_db(access_ok, op1, 3, &regs->sp);
 			break;
 		case 0xdd:
-			emulate_mov_db(op1, 3, &regs->bp);
+			emulate_mov_db(access_ok, op1, 3, &regs->bp);
 			break;
 
 		/* db6 handling */
 		case 0xf0:
-			emulate_mov_db(op1, 6, &regs->ax);
+			emulate_mov_db(access_ok, op1, 6, &regs->ax);
 			break;
 		case 0xf3:
-			emulate_mov_db(op1, 6, &regs->bx);
+			emulate_mov_db(access_ok, op1, 6, &regs->bx);
 			break;
 		case 0xf1:
-			emulate_mov_db(op1, 6, &regs->cx);
+			emulate_mov_db(access_ok, op1, 6, &regs->cx);
 			break;
 		case 0xf2:
-			emulate_mov_db(op1, 6, &regs->dx);
+			emulate_mov_db(access_ok, op1, 6, &regs->dx);
 			break;
 		case 0xf7:
-			emulate_mov_db(op1, 6, &regs->di);
+			emulate_mov_db(access_ok, op1, 6, &regs->di);
 			break;
 		case 0xf6:
-			emulate_mov_db(op1, 6, &regs->si);
+			emulate_mov_db(access_ok, op1, 6, &regs->si);
 			break;
 		case 0xf4:
-			emulate_mov_db(op1, 6, &regs->sp);
+			emulate_mov_db(access_ok, op1, 6, &regs->sp);
 			break;
 		case 0xf5:
-			emulate_mov_db(op1, 7, &regs->bp);
+			emulate_mov_db(access_ok, op1, 7, &regs->bp);
 			break;
 
 		/* db7 handling */
 		case 0xf8:
-			emulate_mov_db(op1, 7, &regs->ax);
+			emulate_mov_db(access_ok, op1, 7, &regs->ax);
 			break;
 		case 0xfb:
-			emulate_mov_db(op1, 7, &regs->bx);
+			emulate_mov_db(access_ok, op1, 7, &regs->bx);
 			break;
 		case 0xf9:
-			emulate_mov_db(op1, 7, &regs->cx);
+			emulate_mov_db(access_ok, op1, 7, &regs->cx);
 			break;
 		case 0xfa:
-			emulate_mov_db(op1, 7, &regs->dx);
+			emulate_mov_db(access_ok, op1, 7, &regs->dx);
 			break;
 		case 0xff:
-			emulate_mov_db(op1, 7, &regs->di);
+			emulate_mov_db(access_ok, op1, 7, &regs->di);
 			break;
 		case 0xfe:
-			emulate_mov_db(op1, 7, &regs->si);
+			emulate_mov_db(access_ok, op1, 7, &regs->si);
 			break;
 		case 0xfc:
-			emulate_mov_db(op1, 7, &regs->sp);
+			emulate_mov_db(access_ok, op1, 7, &regs->sp);
 			break;
 		case 0xfd:
-			emulate_mov_db(op1, 7, &regs->bp);
+			emulate_mov_db(access_ok, op1, 7, &regs->bp);
 			break;
 		}
 		regs->ip += 3;
@@ -286,153 +291,153 @@ static int emulate_cpu(struct pt_regs *regs)
 		switch (op3) {
 		/* db0 handling */
 		case 0xc0:
-			emulate_mov_db(op2, 0, &regs->r8);
+			emulate_mov_db(access_ok, op2, 0, &regs->r8);
 			break;
 		case 0xc1:
-			emulate_mov_db(op2, 0, &regs->r9);
+			emulate_mov_db(access_ok, op2, 0, &regs->r9);
 			break;
 		case 0xc2:
-			emulate_mov_db(op2, 0, &regs->r10);
+			emulate_mov_db(access_ok, op2, 0, &regs->r10);
 			break;
 		case 0xc3:
-			emulate_mov_db(op2, 0, &regs->r11);
+			emulate_mov_db(access_ok, op2, 0, &regs->r11);
 			break;
 		case 0xc4:
-			emulate_mov_db(op2, 0, &regs->r12);
+			emulate_mov_db(access_ok, op2, 0, &regs->r12);
 			break;
 		case 0xc5:
-			emulate_mov_db(op2, 0, &regs->r13);
+			emulate_mov_db(access_ok, op2, 0, &regs->r13);
 			break;
 		case 0xc6:
-			emulate_mov_db(op2, 0, &regs->r14);
+			emulate_mov_db(access_ok, op2, 0, &regs->r14);
 			break;
 		case 0xc7:
-			emulate_mov_db(op2, 0, &regs->r15);
+			emulate_mov_db(access_ok, op2, 0, &regs->r15);
 			break;
 		/* db1 handling */
 		case 0xc8:
-			emulate_mov_db(op2, 1, &regs->r8);
+			emulate_mov_db(access_ok, op2, 1, &regs->r8);
 			break;
 		case 0xc9:
-			emulate_mov_db(op2, 1, &regs->r9);
+			emulate_mov_db(access_ok, op2, 1, &regs->r9);
 			break;
 		case 0xca:
-			emulate_mov_db(op2, 1, &regs->r10);
+			emulate_mov_db(access_ok, op2, 1, &regs->r10);
 			break;
 		case 0xcb:
-			emulate_mov_db(op2, 1, &regs->r11);
+			emulate_mov_db(access_ok, op2, 1, &regs->r11);
 			break;
 		case 0xcc:
-			emulate_mov_db(op2, 1, &regs->r12);
+			emulate_mov_db(access_ok, op2, 1, &regs->r12);
 			break;
 		case 0xcd:
-			emulate_mov_db(op2, 1, &regs->r13);
+			emulate_mov_db(access_ok, op2, 1, &regs->r13);
 			break;
 		case 0xce:
-			emulate_mov_db(op2, 1, &regs->r14);
+			emulate_mov_db(access_ok, op2, 1, &regs->r14);
 			break;
 		case 0xcf:
-			emulate_mov_db(op2, 1, &regs->r15);
+			emulate_mov_db(access_ok, op2, 1, &regs->r15);
 			break;
 		/* db2 handling */
 		case 0xd0:
-			emulate_mov_db(op2, 2, &regs->r8);
+			emulate_mov_db(access_ok, op2, 2, &regs->r8);
 			break;
 		case 0xd1:
-			emulate_mov_db(op2, 2, &regs->r9);
+			emulate_mov_db(access_ok, op2, 2, &regs->r9);
 			break;
 		case 0xd2:
-			emulate_mov_db(op2, 2, &regs->r10);
+			emulate_mov_db(access_ok, op2, 2, &regs->r10);
 			break;
 		case 0xd3:
-			emulate_mov_db(op2, 2, &regs->r11);
+			emulate_mov_db(access_ok, op2, 2, &regs->r11);
 			break;
 		case 0xd4:
-			emulate_mov_db(op2, 2, &regs->r12);
+			emulate_mov_db(access_ok, op2, 2, &regs->r12);
 			break;
 		case 0xd5:
-			emulate_mov_db(op2, 2, &regs->r13);
+			emulate_mov_db(access_ok, op2, 2, &regs->r13);
 			break;
 		case 0xd6:
-			emulate_mov_db(op2, 2, &regs->r14);
+			emulate_mov_db(access_ok, op2, 2, &regs->r14);
 			break;
 		case 0xd7:
-			emulate_mov_db(op2, 2, &regs->r15);
+			emulate_mov_db(access_ok, op2, 2, &regs->r15);
 			break;
 		/* db3 handling */
 		case 0xd8:
-			emulate_mov_db(op2, 3, &regs->r8);
+			emulate_mov_db(access_ok, op2, 3, &regs->r8);
 			break;
 		case 0xd9:
-			emulate_mov_db(op2, 3, &regs->r9);
+			emulate_mov_db(access_ok, op2, 3, &regs->r9);
 			break;
 		case 0xda:
-			emulate_mov_db(op2, 3, &regs->r10);
+			emulate_mov_db(access_ok, op2, 3, &regs->r10);
 			break;
 		case 0xdb:
-			emulate_mov_db(op2, 3, &regs->r11);
+			emulate_mov_db(access_ok, op2, 3, &regs->r11);
 			break;
 		case 0xdc:
-			emulate_mov_db(op2, 3, &regs->r12);
+			emulate_mov_db(access_ok, op2, 3, &regs->r12);
 			break;
 		case 0xdd:
-			emulate_mov_db(op2, 3, &regs->r13);
+			emulate_mov_db(access_ok, op2, 3, &regs->r13);
 			break;
 		case 0xde:
-			emulate_mov_db(op2, 3, &regs->r14);
+			emulate_mov_db(access_ok, op2, 3, &regs->r14);
 			break;
 		case 0xdf:
-			emulate_mov_db(op2, 3, &regs->r15);
+			emulate_mov_db(access_ok, op2, 3, &regs->r15);
 			break;
 		/* db6 handling */
 		case 0xf0:
-			emulate_mov_db(op2, 6, &regs->r8);
+			emulate_mov_db(access_ok, op2, 6, &regs->r8);
 			break;
 		case 0xf1:
-			emulate_mov_db(op2, 6, &regs->r9);
+			emulate_mov_db(access_ok, op2, 6, &regs->r9);
 			break;
 		case 0xf2:
-			emulate_mov_db(op2, 6, &regs->r10);
+			emulate_mov_db(access_ok, op2, 6, &regs->r10);
 			break;
 		case 0xf3:
-			emulate_mov_db(op2, 6, &regs->r11);
+			emulate_mov_db(access_ok, op2, 6, &regs->r11);
 			break;
 		case 0xf4:
-			emulate_mov_db(op2, 6, &regs->r12);
+			emulate_mov_db(access_ok, op2, 6, &regs->r12);
 			break;
 		case 0xf5:
-			emulate_mov_db(op2, 6, &regs->r13);
+			emulate_mov_db(access_ok, op2, 6, &regs->r13);
 			break;
 		case 0xf6:
-			emulate_mov_db(op2, 6, &regs->r14);
+			emulate_mov_db(access_ok, op2, 6, &regs->r14);
 			break;
 		case 0xf7:
-			emulate_mov_db(op2, 6, &regs->r15);
+			emulate_mov_db(access_ok, op2, 6, &regs->r15);
 			break;
 		/* db7 handling */
 		case 0xf8:
-			emulate_mov_db(op2, 7, &regs->r8);
+			emulate_mov_db(access_ok, op2, 7, &regs->r8);
 			break;
 		case 0xf9:
-			emulate_mov_db(op2, 7, &regs->r9);
+			emulate_mov_db(access_ok, op2, 7, &regs->r9);
 			break;
 		case 0xfa:
-			emulate_mov_db(op2, 7, &regs->r10);
+			emulate_mov_db(access_ok, op2, 7, &regs->r10);
 			break;
 		case 0xfb:
-			emulate_mov_db(op2, 7, &regs->r11);
+			emulate_mov_db(access_ok, op2, 7, &regs->r11);
 			break;
 		case 0xfc:
-			emulate_mov_db(op2, 7, &regs->r12);
+			emulate_mov_db(access_ok, op2, 7, &regs->r12);
 			break;
 		case 0xfd:
-			emulate_mov_db(op2, 7, &regs->r13);
+			emulate_mov_db(access_ok, op2, 7, &regs->r13);
 			break;
 		case 0xfe:
-			emulate_mov_db(op2, 7, &regs->r14);
+			emulate_mov_db(access_ok, op2, 7, &regs->r14);
 			break;
 		case 0xff:
-			emulate_mov_db(op2, 7, &regs->r15);
+			emulate_mov_db(access_ok, op2, 7, &regs->r15);
 			break;
 		}
 		regs->ip += 4;
@@ -447,9 +452,8 @@ static int emulate_cpu(struct pt_regs *regs)
 static int hw_breakpoint_handler(struct pt_regs *regs, unsigned long dr6)
 {
 	if (dr6 & DR6_BD) {
-		pr_debug("%s: rip=%lx\n", __func__, regs->ip);
+		pr_debug("%s: DR6_BD ip=%lx\n", __func__, regs->ip);
 		emulate_cpu(regs);
-		pr_debug("%s: new_ip=%lx\n", __func__, regs->ip);
 		return 0;
 	}
 
@@ -482,7 +486,7 @@ static int hw_breakpoint_notify(struct notifier_block *self, unsigned long val, 
 	/* dr6 cleared by do_debug (see traps.c) */
 	dr6 = *(unsigned long *)ERR_PTR(args->err);
 	ret = hw_breakpoint_handler(regs, dr6);
-	__set_dr(7, bps.dr7);
+	set_dr(7, bps.dr7);
 	if (ret)
 		return NOTIFY_DONE;
 	else
@@ -569,6 +573,36 @@ void x86_hw_breakpoint_debug(void)
 		get_dr(i, &dr);
 		pr_debug("\tdr%d=%lx\n", i, dr);
 	}
+
+	/* retry with debug register protection */
+	pr_debug("%s: debug registers state (dr protect)\n", __func__);
+	__get_dr(0, dr);
+	pr_debug("\tdr0=%lx\n", dr);
+	__get_dr(1, dr);
+	pr_debug("\tdr1=%lx\n", dr);
+	__get_dr(2, dr);
+	pr_debug("\tdr2=%lx\n", dr);
+	__get_dr(3, dr);
+	pr_debug("\tdr3=%lx\n", dr);
+	__get_dr(6, dr);
+	pr_debug("\tdr6=%lx\n", dr);
+	__get_dr(7, dr);
+	pr_debug("\tdr7=%lx\n", dr);
+
+	pr_debug("%s: try to set debug registters (dr protect)\n", __func__);
+	dr=0xbadc0ded;
+	pr_debug("\tdr0\n");
+	__set_dr(0, dr);
+	pr_debug("\tdr1\n");
+	__set_dr(1, dr);
+	pr_debug("\tdr2\n");
+	__set_dr(2, dr);
+	pr_debug("\tdr3\n");
+	__set_dr(3, dr);
+	pr_debug("\tdr6\n");
+	__set_dr(6, dr);
+	pr_debug("\tdr7\n");
+	__set_dr(7, dr);
 }
 
 #include <linux/notifier.h>
