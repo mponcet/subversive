@@ -480,17 +480,18 @@ static int hw_breakpoint_notify(struct notifier_block *self, unsigned long val, 
 	if (val != DIE_DEBUG)
 		return NOTIFY_DONE;
 
+	/* dr6 saved in args->err, we can clear it*/
+	set_dr(6, 0);
 	/* clear dr7 to prevent debug exceptions */
 	set_dr(7, 0);
 
-	/* dr6 cleared by do_debug (see traps.c) */
-	dr6 = *(unsigned long *)ERR_PTR(args->err);
+	dr6 = *(unsigned long *)args->err;
 	ret = hw_breakpoint_handler(regs, dr6);
+	ret = ret ? NOTIFY_DONE : NOTIFY_STOP;
+
 	set_dr(7, bps.dr7);
-	if (ret)
-		return NOTIFY_DONE;
-	else
-		return NOTIFY_STOP;
+
+	return ret;
 }
 
 static void new_do_debug(struct pt_regs *regs, long error_code)
@@ -512,10 +513,7 @@ static void new_do_debug(struct pt_regs *regs, long error_code)
 
 static unsigned int *patched_addr = NULL;
 static unsigned int old_rip_off;
-/*
- * patch the call to do_debug inside debug interrupt handler
- * TODO: x86_32
- */
+
 static int patch_debug_entry(void)
 {
 	int call_found = 0;
@@ -526,8 +524,10 @@ static int patch_debug_entry(void)
 		if (call_found == 2) {
 			patched_addr = (unsigned int *)ptr;
 			old_rip_off = *patched_addr;
-			rip_offset = (unsigned long)new_do_debug - (unsigned long)patched_addr - 4;
-			ksyms.old_do_debug = (void *)(old_rip_off+(unsigned long)patched_addr) + 4;
+			rip_offset = (unsigned long)new_do_debug -
+				     (unsigned long)patched_addr - 4;
+			ksyms.old_do_debug = (void *)(old_rip_off +
+					     (unsigned long)patched_addr) + 4;
 
 			clear_CR0_WP();
 			*patched_addr = rip_offset;
@@ -618,7 +618,9 @@ int x86_hw_breakpoint_init(void)
 		 __func__, bps.old_dr[0], bps.old_dr[1], bps.old_dr[2],
 		 bps.old_dr[3], bps.old_dr6, bps.old_dr7);
 
-	if (rk_cfg.patch_debug || !ksyms.die_chain) {
+	if (rk_cfg.patch_debug
+	    || !ksyms.die_chain
+	    || !ksyms.register_die_notifier) {
 		rk_cfg.patch_debug = 1;
 		debug_handler_patched = !patch_debug_entry();
 		if (!debug_handler_patched)
@@ -651,7 +653,7 @@ int x86_hw_breakpoint_exit(void)
 	if (rk_cfg.patch_debug) {
 		if (debug_handler_patched)
 			restore_debug_entry();
-	} else {
+	} else if (ksyms.unregister_die_notifier) {
 		ksyms.unregister_die_notifier(&hw_breakpoint_notifier_block);
 	}
 
@@ -659,7 +661,7 @@ int x86_hw_breakpoint_exit(void)
 }
 
 /*
- * register_dr_breakpoint: enable debug register breakpoint
+ * x86_hw_breakpoint_register: enable debug register breakpoint
  */
 int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 				int len, bp_handler handler)
@@ -668,8 +670,6 @@ int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 
 	if (dr_nr >= 4 || dr_nr < 0)
 		return -1;
-
-	/* TODO: should check if dr already used and add a force mode */
 
 	bps.dr[dr_nr] = addr;
 	bps.handlers[dr_nr] = handler;
@@ -686,7 +686,7 @@ int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 }
 
 /*
- * unregister_dr_bps: disable debug register in dr7, restore old register
+ * x86_hw_breakpoint_unregister: disable debug register in dr7, restore old register
  */
 int x86_hw_breakpoint_unregister(int dr_nr)
 {
@@ -703,6 +703,9 @@ int x86_hw_breakpoint_unregister(int dr_nr)
 	return 0;
 }
 
+/*
+ * x86_hw_breakpoint_protect_enable: enable debug registers protection
+ */
 void x86_hw_breakpoint_protect_enable(void)
 {
 	bps.dr7 |= DR7_GD;

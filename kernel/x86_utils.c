@@ -31,40 +31,50 @@ static int __get_sycall_addrs(unsigned long base,
 	return -1;
 }
 
+/*
+ * x86_get_kernel_syms: get syscall table addr
+ * ia32 addrs are not mandatory (CONFIG_IA32_EMULATION=n ?)
+ */
 int x86_get_kernel_syms(void)
 {
 	int ret = 0;
 
 	/*
-	 * FIXME: handle CONFIG_IA32_EMULATION=n
-	 * FIXME: check addr in kernel space
-	 */
-
-	/*
 	 * ia32 emulation via sysenter (not used ?)
 	 */
 	rdmsrl(MSR_IA32_SYSENTER_EIP, ksyms.ia32_sysenter);
-	ret = __get_sycall_addrs(ksyms.ia32_sysenter,
-				 &ksyms.ia32_sys_call_table,
-				 &ksyms.ia32_sysenter_sys_call_table_call);
+	if (ksyms.ia32_sysenter) {
+		ret = __get_sycall_addrs(ksyms.ia32_sysenter,
+					 &ksyms.ia32_sys_call_table,
+					 &ksyms.ia32_sysenter_sys_call_table_call);
+		if (ret)
+			goto exit;
+	}
 
 	/*
 	 * ia32 emulation via syscall
 	 */
 	ksyms.ia32_syscall = get_idt_handler(0x80);
-	ret |= __get_sycall_addrs(ksyms.ia32_syscall,
-				  &ksyms.ia32_sys_call_table,
-				  &ksyms.ia32_syscall_sys_call_table_call);
+	if (ksyms.ia32_syscall) {
+		ret = __get_sycall_addrs(ksyms.ia32_syscall,
+					  &ksyms.ia32_sys_call_table,
+					  &ksyms.ia32_syscall_sys_call_table_call);
+		if (ret)
+			goto exit;
+	}
 
 	/*
 	 * x86_64
 	 */
 	rdmsrl(MSR_LSTAR, ksyms.system_call);
-	ret |= __get_sycall_addrs(ksyms.system_call,
-				  &ksyms.sys_call_table,
-				  &ksyms.sys_call_table_call);
+	if (ksyms.system_call)
+		ret = __get_sycall_addrs(ksyms.system_call,
+					  &ksyms.sys_call_table,
+					  &ksyms.sys_call_table_call);
+	else
+		ret = -1;
 
-
+exit:
 	pr_debug("%s: ia32_sysenter=%lx ia32_sysenter_sys_call_table_call=%lx\n",
 		 __func__, ksyms.ia32_sysenter, ksyms.ia32_sysenter_sys_call_table_call);
 	pr_debug("%s: ia32_syscall=%lx ia32_syscall_sys_call_table_call=%lx\n",
