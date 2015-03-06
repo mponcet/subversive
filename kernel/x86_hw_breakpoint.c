@@ -498,13 +498,11 @@ static void new_do_debug(struct pt_regs *regs, long error_code)
 	int ret;
 	unsigned long dr6;
 
-	/* FIXME: check error_code */
-
 	/* clear dr7 to prevent debug exceptions */
 	set_dr(7, 0);
 
 	get_dr(6, &dr6);
-	set_dr(6, 0UL);
+	set_dr(6, 0);
 	ret = hw_breakpoint_handler(regs, dr6);
 	if (ret)
 		ksyms.old_do_debug(regs, error_code);
