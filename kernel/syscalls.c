@@ -685,8 +685,6 @@ int hook_sys_call_table(void)
 	/* architecture specific */
 	x86_hw_breakpoint_register(0, ksyms.sys_call_table_call,
 					DR_RW_EXECUTE, 0, system_call_hook);
-	x86_hw_breakpoint_register(1, ksyms.ia32_syscall_sys_call_table_call,
-					DR_RW_EXECUTE, 0, ia32_system_call_hook);
 
 	return 0;
 }
