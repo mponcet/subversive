@@ -1,8 +1,6 @@
 #ifndef __X86_H
 #define __X86_H
 
-#include <linux/smp.h>
-
 struct idtr {
         unsigned short limit;
         unsigned long base;
@@ -40,22 +38,34 @@ static inline unsigned long get_idt_handler(int off)
 		| ((unsigned long)desc->off32_63 << 32);
 }
 
-static inline void set_CR0_WP(void)
+static inline unsigned long __read_cr0(void)
 {
 	unsigned long cr0;
-
 	asm volatile ("mov %%cr0, %0" : "=r" (cr0));
-	cr0 |= 0x00010000;
-	asm volatile ("mov %0, %%cr0" : : "r" (cr0));
+	return cr0;
 }
 
-static inline void clear_CR0_WP(void)
+static inline void __write_cr0(unsigned long cr0)
+{
+	asm volatile("mov %0, %%cr0" : : "r" (cr0));
+}
+
+static inline void cr0_wp_exit(void)
 {
 	unsigned long cr0;
 
-	asm volatile ("mov %%cr0, %0" : "=r" (cr0));
-	cr0 &= ~0x00010000;
-	asm volatile ("mov %0, %%cr0" : : "r" (cr0));
+	cr0 = __read_cr0() | 0x10000;
+	__write_cr0(cr0);
+	asm volatile("sti");
+}
+
+static inline void cr0_wp_enter(void)
+{
+	unsigned long cr0;
+
+	asm volatile("cli");
+	cr0 = __read_cr0() & ~0x10000;
+	__write_cr0(cr0);
 }
 
 int x86_get_kernel_syms(void);
