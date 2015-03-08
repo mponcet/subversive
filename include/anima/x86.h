@@ -95,6 +95,7 @@ enum bp_type {
 #define DR6_BD	 (1 << 13)
 #define DR6_BS	 (1 << 14)
 #define DR6_BT	 (1 << 15)
+#define DR6_RESERVED 0xffff0ff0
 
 
 /*

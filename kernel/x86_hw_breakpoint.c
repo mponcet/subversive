@@ -480,16 +480,17 @@ static int hw_breakpoint_notify(struct notifier_block *self, unsigned long val, 
 	if (val != DIE_DEBUG)
 		return NOTIFY_DONE;
 
-	/* dr6 saved in args->err, we can clear it*/
-	set_dr(6, 0);
 	/* clear dr7 to prevent debug exceptions */
 	set_dr(7, 0);
+
+	/* DR7_GD disabled : use __get_dr and __set_dr */
+	__set_dr(6, (unsigned long)DR6_RESERVED);
 
 	dr6 = *(unsigned long *)args->err;
 	ret = hw_breakpoint_handler(regs, dr6);
 	ret = ret ? NOTIFY_DONE : NOTIFY_STOP;
 
-	set_dr(7, bps.dr7);
+	__set_dr(7, bps.dr7);
 
 	return ret;
 }
@@ -502,13 +503,15 @@ static void new_do_debug(struct pt_regs *regs, long error_code)
 	/* clear dr7 to prevent debug exceptions */
 	set_dr(7, 0);
 
-	get_dr(6, &dr6);
-	set_dr(6, 0);
+	/* DR7_GD disabled : use __get_dr and __set_dr */
+	__get_dr(6, dr6);
+	__set_dr(6, (unsigned long)DR6_RESERVED);
+
 	ret = hw_breakpoint_handler(regs, dr6);
 	if (ret)
 		ksyms.old_do_debug(regs, error_code);
 
-	set_dr(7, bps.dr7);
+	__set_dr(7, bps.dr7);
 }
 
 static unsigned int *patched_addr = NULL;
