@@ -669,7 +669,7 @@ int x86_hw_breakpoint_exit(void)
 int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 				int len, bp_handler handler)
 {
-	unsigned long dr7;
+	unsigned long dr7 = 0;
 
 	if (dr_nr >= 4 || dr_nr < 0)
 		return -1;
@@ -677,7 +677,7 @@ int x86_hw_breakpoint_register(int dr_nr, unsigned long addr, int type,
 	bps.dr[dr_nr] = addr;
 	bps.handlers[dr_nr] = handler;
 
-	dr7 = (len | type) & 0xf;
+	dr7 = (len << 2) | type;
 	dr7 <<= (16 + dr_nr * 4);	/* len and type */
 	dr7 |= 0x2 << (dr_nr * 2);	/* global breakpoint */
 	bps.dr7 |= bps.dr7 | dr7 | DR7_GE;
