@@ -140,6 +140,8 @@ int get_kernel_syms(void)
 		(void *)get_symbol_addr("unregister_die_notifier");
 	ksyms.filp_open = (void *)get_symbol_addr("filp_open");
 	ksyms.filp_close = (void *)get_symbol_addr("filp_close");
+	ksyms.vmalloc = (void *)get_symbol_addr("vmalloc");
+	ksyms.vfree = (void *)get_symbol_addr("vfree");
 
 	return 0;
 }

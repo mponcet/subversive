@@ -80,6 +80,8 @@ struct kernel_syms {
 	int (*unregister_die_notifier)(struct notifier_block *);
 	void *(*filp_open)(const char *, int, umode_t);
 	int (*filp_close)(void *, void *);
+	void *(*vmalloc)(unsigned int);
+	void *(*vfree)(void *);
 
 };
 
