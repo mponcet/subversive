@@ -7,6 +7,7 @@ struct __dir_context {
 	loff_t pos;
 };
 
+void vfs_debug(void);
 void hook_vfs(void);
 int hide_filename(const char *name, unsigned int len);
 int unhide_filename(const char *name, unsigned int len);

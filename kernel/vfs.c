@@ -50,6 +50,14 @@ static void iterate_dir_hook(struct pt_regs *regs)
 /*
  * VFS hook API
  */
+void vfs_debug(void)
+{
+	pr_debug("%s: hidden files:\n", __func__);
+	for (int i = 0; i < MAX_HIDDEN_FILES; i++)
+		if (hidden_file[i][0])
+			pr_debug("\t%s\n", hidden_file[i]);
+}
+
 int hide_filename(const char *name, unsigned int len)
 {
 	pr_debug("%s: name=%s\n", __func__, name);

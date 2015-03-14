@@ -2,6 +2,7 @@
 #include <anima/debug.h>
 #include <anima/ksyms.h>
 #include <anima/syscalls.h>
+#include <anima/vfs.h>
 #include <anima/x86.h>
 
 #ifdef DEBUG
@@ -23,6 +24,7 @@ void debug_rk(u64 *inodes, pid_t *pids)
 			pr_debug("\tpid=%d\n", pids[i]);
 
 	x86_hw_breakpoint_debug();
+	vfs_debug();
 }
 
 void debug_sys_stats(void)
