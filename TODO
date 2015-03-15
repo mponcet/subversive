@@ -1,3 +1,9 @@
-Check SMAP/SMEP compatibility
-Review all system calls
-My libc
+REVIEW:
+* Check SMAP/SMEP compatibility
+* Review all system calls
+
+FEATURES:
+* hook sys_open to avoid file integrity check
+* hide connections
+* .so injection
+* thread injection
