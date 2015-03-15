@@ -26,6 +26,6 @@ static inline void sys_stats_init(int sys)
 #endif
 
 void debug_sys_stats(void);
-void debug_rk(u64 *inodes, pid_t *pids);
+void debug_rk(void);
 
 #endif
