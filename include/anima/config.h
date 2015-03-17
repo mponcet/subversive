@@ -3,6 +3,7 @@
 
 #define MAX_HIDDEN_INODES 1024
 #define MAX_HIDDEN_PIDS   1024
+#define MAX_PATH_LEN	  512
 
 struct rootkit_config {
 	int state;

