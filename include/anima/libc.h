@@ -1,6 +1,8 @@
 #ifndef __LIBC_H
 #define __LIBC_H
 
+#include <anima/ksyms.h>
+
 void *anima_memcpy(void *dst, const void *src, unsigned int n);
 void *anima_memset(void *s, int c, unsigned int n);
 unsigned int anima_strlen(const char *s);
