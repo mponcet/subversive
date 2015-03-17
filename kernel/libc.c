@@ -1,3 +1,6 @@
+#include <anima/ksyms.h>
+#include <anima/libc.h>
+
 void *anima_memcpy(void *dst, const void *src, unsigned int n)
 {
 	char *_dst = dst;
@@ -75,4 +78,22 @@ int anima_strncmp(const char *s1, const char *s2, unsigned int n)
 	}
 
 	return c1 - c2;
+}
+
+char *anima_strdup_from_user(const char *ustr, unsigned int ulen)
+{
+	char *kstr;
+
+	kstr = anima_vmalloc(ulen+1);
+	if (!kstr)
+		return NULL;
+
+	if (ksyms._copy_from_user(kstr, ustr, ulen)) {
+		anima_vfree(kstr);
+		return NULL;
+	}
+
+	kstr[ulen] = 0;
+
+	return kstr;
 }
