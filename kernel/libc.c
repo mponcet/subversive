@@ -82,7 +82,8 @@ int anima_strncmp(const char *s1, const char *s2, unsigned int n)
 
 char *anima_strndup_from_user(const char *ustr, unsigned int ulen)
 {
-	char *kstr;
+	char *kstr, *kstr_copy;
+	unsigned int klen;
 
 	kstr = anima_vmalloc(ulen+1);
 	if (!kstr)
@@ -94,6 +95,22 @@ char *anima_strndup_from_user(const char *ustr, unsigned int ulen)
 	}
 
 	kstr[ulen] = 0;
+	klen = anima_strlen(kstr);
+	kstr[klen] = 0;
+	if (klen == ulen) {
+		pr_debug("%s: klen == ulen\n", __func__);
+		return kstr;
+	}
 
-	return kstr;
+	/* copy inside a smaller block */
+	pr_debug("%s: copy in a smaller block %u -> %u\n", __func__, ulen, klen);
+	kstr_copy = anima_vmalloc(klen+1);
+	if (!kstr_copy)
+		return kstr;
+
+	anima_memcpy(kstr_copy, kstr, klen);
+	kstr_copy[klen] = 0;
+	anima_vfree(kstr);
+
+	return kstr_copy;
 }
