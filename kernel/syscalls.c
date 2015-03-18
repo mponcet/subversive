@@ -224,15 +224,9 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 	char *filename = (char *)__filename;
 	SYS_STATS_INC(execve);
 
-	old_path = anima_vmalloc(MAX_PATH_LEN);
+	old_path = anima_strndup_from_user(filename, MAX_PATH_LEN);
 	if (!old_path)
 		goto out;
-
-	r = ksyms._copy_from_user(old_path, filename, MAX_PATH_LEN);
-	if (r)
-		goto free_old_path;
-
-	old_path[MAX_PATH_LEN-1] = 0;
 
 	new_path = get_redirect_path((char *)old_path, REDIRECT_PATH_EXECVE);
 	if (new_path) {
@@ -254,7 +248,6 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 			filename += path_len_delta;
 		}
 	}
-free_old_path:
 	anima_vfree(old_path);
 out:
 	return ksyms.old_sys_execve(filename, argv, envp);
