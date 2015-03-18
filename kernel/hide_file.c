@@ -63,11 +63,11 @@ void redirect_path(char *old_path, unsigned int old_path_len,
 	if (new_path_len > MAX_PATH_LEN)
 		new_path_len = MAX_PATH_LEN;
 
-	kold_path = anima_strdup_from_user(old_path, old_path_len);
+	kold_path = anima_strndup_from_user(old_path, old_path_len);
 	if (!kold_path)
 		goto out;
 
-	knew_path = anima_strdup_from_user(new_path, new_path_len);
+	knew_path = anima_strndup_from_user(new_path, new_path_len);
 	if (!knew_path)
 		goto free_kold_path;
 
@@ -97,7 +97,7 @@ void unredirect_path(const char *old_path, unsigned int len, int mode)
 	if (len > MAX_PATH_LEN)
 		len = MAX_PATH_LEN;
 
-	kold_path = anima_strdup_from_user(old_path, len);
+	kold_path = anima_strndup_from_user(old_path, len);
 	if (!kold_path)
 		return;
 

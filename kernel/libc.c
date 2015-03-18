@@ -80,7 +80,7 @@ int anima_strncmp(const char *s1, const char *s2, unsigned int n)
 	return c1 - c2;
 }
 
-char *anima_strdup_from_user(const char *ustr, unsigned int ulen)
+char *anima_strndup_from_user(const char *ustr, unsigned int ulen)
 {
 	char *kstr;
 
