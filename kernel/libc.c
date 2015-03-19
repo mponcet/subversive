@@ -97,13 +97,10 @@ char *anima_strndup_from_user(const char *ustr, unsigned int ulen)
 	kstr[ulen] = 0;
 	klen = anima_strlen(kstr);
 	kstr[klen] = 0;
-	if (klen == ulen) {
-		pr_debug("%s: klen == ulen\n", __func__);
+	if (klen == ulen)
 		return kstr;
-	}
 
 	/* copy inside a smaller block */
-	pr_debug("%s: copy in a smaller block %u -> %u\n", __func__, ulen, klen);
 	kstr_copy = anima_vmalloc(klen+1);
 	if (!kstr_copy)
 		return kstr;
