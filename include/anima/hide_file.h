@@ -4,6 +4,7 @@
 struct redirect_path {
 	int mode;
 #define REDIRECT_PATH_EXECVE	1
+#define REDIRECT_PATH_OPEN	2
 	/* alloced via vmalloc */
 	char *old_path;
 	unsigned int old_path_len;

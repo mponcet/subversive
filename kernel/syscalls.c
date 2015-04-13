@@ -129,8 +129,18 @@ asmlinkage long new_sys_fstatat(int fd, char *path, struct stat *st, int flag)
 asmlinkage long new_sys_open(char *filename, int flags, umode_t mode)
 {
 	long ret;
+	char *old_path, *new_path;
 	struct stat st;
 	SYS_STATS_INC(open);
+
+	if ((mode & 0xfffffffe) != 0) {
+		/* ! O_RDONLY */
+		goto out;
+	}
+
+	old_path = anima_strndup_from_user(filename, MAX_PATH_LEN);
+	if (!old_path)
+		goto out;
 
 	SET_KERNEL_DS;
 	ret = ksyms.old_sys_stat(filename, &st);
@@ -138,6 +148,17 @@ asmlinkage long new_sys_open(char *filename, int flags, umode_t mode)
 	if (!ret && is_inode_hidden(st.st_ino))
 		return -ENOENT;
 
+
+	new_path = get_redirect_path(old_path, REDIRECT_PATH_OPEN);
+	if (new_path) {
+		pr_debug("%s: redirect %s to %s\n", __func__, old_path, new_path);
+		SET_KERNEL_DS;
+		ret = ksyms.old_sys_open(new_path, flags, mode);
+		SET_OLD_FS;
+		return ret;
+	}
+	anima_vfree(old_path);
+out:
 	return ksyms.old_sys_open(filename, flags, mode);
 }
 
