@@ -1,12 +1,12 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
+#include <anima/arch.h>
 #include <anima/config.h>
 #include <anima/debug.h>
 #include <anima/ksyms.h>
 #include <anima/syscalls.h>
 #include <anima/vfs.h>
-#include <anima/x86.h>
 
 MODULE_LICENSE("GPL");
 
@@ -30,16 +30,20 @@ static int __init anima_init(void)
 		return 1;
 
 	/* architecture specific */
+#if ARCH_X86
 	ret = x86_hw_breakpoint_init();
 	if (ret)
 		return 1;
+#endif
 
 	if (rk_cfg.hook_syscall)
 		hook_sys_call_table();
 	if (rk_cfg.hook_vfs)
 		vfs_hook();
+#if ARCH_X86
 	if (rk_cfg.dr_protect)
 		x86_hw_breakpoint_protect_enable();
+#endif
 
 	rk_cfg.state = RK_ACTIVE;
 
@@ -49,13 +53,17 @@ static int __init anima_init(void)
 static void __exit anima_exit(void)
 {
 	rk_cfg.state = RK_SHUTDOWN;
+#if ARCH_X86
 	if (rk_cfg.dr_protect)
 		x86_hw_breakpoint_protect_disable();
+#endif
 
 	pr_debug("%s: exit\n", __func__);
 
 	/* architecture specific */
+#if ARCH_X86
 	x86_hw_breakpoint_exit();
+#endif
 }
 
 module_init(anima_init);

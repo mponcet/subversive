@@ -5,10 +5,11 @@
 #include <linux/notifier.h>
 
 struct kernel_syms {
-	/* x86 specific */
-	unsigned long system_call;
 	unsigned long sys_call_table;
 	unsigned long sys_call_table_call;
+
+	/* x86 specific */
+	unsigned long system_call;
 
 	/* IA32 emulation */
 	unsigned long ia32_sysenter;
@@ -16,6 +17,9 @@ struct kernel_syms {
 	unsigned long ia32_syscall;
 	unsigned long ia32_syscall_sys_call_table_call;
 	unsigned long ia32_sys_call_table;
+
+	/* arm specific */
+	unsigned long vector_swi;
 
 	/* syscalls */
 	long (*old_sys_chdir)(char *);

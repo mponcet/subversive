@@ -7,6 +7,7 @@
 #include <linux/kernel.h>
 #include <linux/perf_event.h>
 
+#include <anima/arch.h>
 #include <anima/config.h>
 #include <anima/debug.h>
 #include <anima/hide_file.h>
@@ -18,7 +19,6 @@
 #include <anima/syscalls.h>
 #include <anima/anima_ctl.h>
 #include <anima/vfs.h>
-#include <anima/x86.h>
 
 #define HOOK(sys, func)	\
 		do {	\
@@ -104,6 +104,7 @@ asmlinkage long new_sys_lstat(char *path, struct stat *st)
 	return ret;
 }
 
+#if ARCH_X86
 asmlinkage long new_sys_fstatat(int fd, char *path, struct stat *st, int flag)
 {
 	long ret;
@@ -125,6 +126,7 @@ asmlinkage long new_sys_fstatat(int fd, char *path, struct stat *st, int flag)
 
 	return ret;
 }
+#endif
 
 asmlinkage long new_sys_open(char *filename, int flags, umode_t mode)
 {
@@ -261,9 +263,13 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 		filename -= path_len_delta;
 
 		/* FIXME: check if we are overwriting argv or envp */
+#if ARCH_X86
 		cr0_wp_enter();
+#endif
 		r = ksyms._copy_to_user(filename, new_path, new_path_len+1);
+#if ARCH_x86
 		cr0_wp_exit();
+#endif
 		if (r) {
 			/* restore filename pointer */
 			filename += path_len_delta;
@@ -443,6 +449,7 @@ asmlinkage long new_sys_ptrace(long request, pid_t pid, void *addr, void *data)
 	return ksyms.old_sys_ptrace(request, pid, addr, data);
 }
 
+#if ARCH_X86
 asmlinkage long new_sys_migrate_pages(pid_t pid, unsigned long maxnode,
 					unsigned long *from, unsigned long *to)
 {
@@ -452,6 +459,7 @@ asmlinkage long new_sys_migrate_pages(pid_t pid, unsigned long maxnode,
 
 	return ksyms.old_sys_migrate_pages(pid, maxnode, from, to);
 }
+#endif
 
 asmlinkage long new_sys_move_pages(pid_t pid, unsigned long nr_pages,
 				void **pages,
@@ -608,11 +616,13 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 
 void system_call_hook(struct pt_regs *regs)
 {
+#if ARCH_X86
 	/*
 	 * call *sys_call_table(,%rax,8)
 	 */
 	unsigned long off = ((unsigned long)fake_sct - ksyms.sys_call_table);
 	regs->ax += off / sizeof(unsigned long);
+#endif
 }
 
 void ia32_system_call_hook(struct pt_regs *regs)
@@ -655,7 +665,9 @@ int hook_sys_call_table(void)
 	HOOK(rt_sigqueueinfo, new_sys_rt_sigqueueinfo);
 	HOOK(prlimit64, new_sys_prlimit64);
 	HOOK(ptrace, new_sys_ptrace);
+#if ARCH_X86
 	HOOK(migrate_pages, new_sys_migrate_pages);
+#endif
 	HOOK(move_pages, new_sys_move_pages);
 	HOOK(get_robust_list, new_sys_get_robust_list);
 	HOOK(perf_event_open, new_sys_perf_event_open);
@@ -668,8 +680,11 @@ int hook_sys_call_table(void)
 	HOOK(reboot, new_sys_reboot);
 
 	/* architecture specific */
+#if ARCH_X86
 	x86_hw_breakpoint_register(0, ksyms.sys_call_table_call,
 					DR_RW_EXECUTE, 0, system_call_hook);
+#elif ARCH_ARM
+#endif
 
 	return 0;
 }

@@ -2,10 +2,10 @@
 #include <linux/kallsyms.h>
 #include <asm/unistd.h>
 
+#include <anima/arch.h>
 #include <anima/debug.h>
 #include <anima/ksyms.h>
 #include <anima/libc.h>
-#include <anima/x86.h>
 
 struct kernel_syms ksyms;
 
@@ -43,8 +43,13 @@ int get_kernel_syms(void)
 {
 	unsigned long *sys_call_table;
 
+#if ARCH_X86
 	if (x86_get_kernel_syms())
 		return -1;
+#elif ARCH_ARM
+	if (arm_get_kernel_syms())
+		return -1;
+#endif
 
 	sys_call_table = (unsigned long *)ksyms.sys_call_table;
 
@@ -52,8 +57,10 @@ int get_kernel_syms(void)
 		(void *)sys_call_table[__NR_stat];
 	ksyms.old_sys_lstat =
 		(void *)sys_call_table[__NR_lstat];
+#if ARCH_X86
 	ksyms.old_sys_fstatat =
 		(void *)sys_call_table[__NR_newfstatat];
+#endif
 	ksyms.old_sys_chdir =
 		(void *)sys_call_table[__NR_chdir];
 	ksyms.old_sys_open =
@@ -114,8 +121,10 @@ int get_kernel_syms(void)
 		(void *)sys_call_table[__NR_prlimit64];
 	ksyms.old_sys_ptrace =
 		(void *)sys_call_table[__NR_ptrace];
+#if ARCH_X86
 	ksyms.old_sys_migrate_pages =
 		(void *)sys_call_table[__NR_migrate_pages];
+#endif
 	ksyms.old_sys_move_pages =
 		(void *)sys_call_table[__NR_move_pages];
 	ksyms.old_sys_perf_event_open =
