@@ -34,6 +34,11 @@ static int __init anima_init(void)
 	ret = x86_hw_breakpoint_init();
 	if (ret)
 		return 1;
+#elif ARCH_ARM
+	ret = arm_hw_breakpoint_init();
+	if (ret)
+		return 1;
+	arm_hw_breakpoint_debug();
 #endif
 
 	if (rk_cfg.hook_syscall)
@@ -63,6 +68,8 @@ static void __exit anima_exit(void)
 	/* architecture specific */
 #if ARCH_X86
 	x86_hw_breakpoint_exit();
+#elif ARCH_ARM
+	arm_hw_breakpoint_exit();
 #endif
 }
 

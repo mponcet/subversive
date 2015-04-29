@@ -17,6 +17,8 @@ void debug_rk(void)
 {
 #if ARCH_X86
 	x86_hw_breakpoint_debug();
+#elif ARCH_ARM
+	arm_hw_breakpoint_debug();
 #endif
 	vfs_debug();
 }
