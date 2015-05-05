@@ -88,6 +88,11 @@ struct kernel_syms {
 	int (*filp_close)(void *, void *);
 	void *(*vmalloc)(unsigned int);
 	void *(*vfree)(void *);
+
+	/* kernel libc */
+	int (*strncmp)(const char *, const char *, unsigned int);
+	unsigned int (*strlcat)(char *, const char *, unsigned int);
+	int (*snprintf)(char *, unsigned int, const char *, ...);
 };
 
 extern struct kernel_syms ksyms;

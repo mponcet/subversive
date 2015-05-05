@@ -154,5 +154,10 @@ int get_kernel_syms(void)
 	ksyms.vmalloc = (void *)get_symbol_addr("vmalloc");
 	ksyms.vfree = (void *)get_symbol_addr("vfree");
 
+	/* kernel libc */
+	ksyms.strncmp = (void *)get_symbol_addr("strcmp");
+	ksyms.strlcat = (void *)get_symbol_addr("strlcat");
+	ksyms.snprintf = (void *)get_symbol_addr("snprintf");
+
 	return 0;
 }
