@@ -157,6 +157,8 @@ int get_kernel_syms(void)
 	ksyms.filp_close = (void *)get_symbol_addr("filp_close");
 	ksyms.vmalloc = (void *)get_symbol_addr("vmalloc");
 	ksyms.vfree = (void *)get_symbol_addr("vfree");
+	ksyms.commit_creds = (void *)get_symbol_addr("commit_creds");
+	ksyms.prepare_kernel_cred = (void *)get_symbol_addr("prepare_kernel_cred");
 
 	/* kernel libc */
 	ksyms.strncmp = (void *)get_symbol_addr("strcmp");

@@ -90,6 +90,8 @@ struct kernel_syms {
 	int (*filp_close)(void *, void *);
 	void *(*vmalloc)(unsigned int);
 	void *(*vfree)(void *);
+	int (*commit_creds)(void *);
+	void *(*prepare_kernel_cred)(void *);
 
 	/* kernel libc */
 	int (*strncmp)(const char *, const char *, unsigned int);

