@@ -115,7 +115,6 @@ static void ksym_fnc(struct keyboard_notifier_param *ks, char *buf)
 	if (val & 0xf0) {
 		anima_strlcat(buf, fncs[val & 0x0f], BUFLEN);
 	} else { /* f-key otherwise */
-		pr_debug("%s: snprintf\n", __func__);
 		anima_snprintf(temp, 6, "%s%d>", F_KEYS, ++val);
 		anima_strlcat(buf, temp, BUFLEN);
 	}
