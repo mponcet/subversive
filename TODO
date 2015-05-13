@@ -7,3 +7,14 @@ FEATURES:
 * hide connections
 * .so injection
 * thread injection
+* handle reboot :
+	- sysv
+	- systemd
+	- /etc/modules
+	- vmlinuz
+	- watch changes via nsnotify
+* ARM :
+	- debug registers
+	- inline hooking
+* Keylogger :
+	- write keylogger buffer inside kernel
