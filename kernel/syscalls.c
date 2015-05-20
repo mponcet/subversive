@@ -267,7 +267,7 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 		cr0_wp_enter();
 #endif
 		r = ksyms._copy_to_user(filename, new_path, new_path_len+1);
-#if ARCH_x86
+#if ARCH_X86
 		cr0_wp_exit();
 #endif
 		if (r) {

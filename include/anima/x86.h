@@ -70,6 +70,7 @@ static inline void cr0_wp_enter(void)
 
 int x86_get_kernel_syms(void);
 
+struct pt_regs;
 typedef void (*bp_handler)(struct pt_regs *regs);
 
 struct dr_breakpoint {
