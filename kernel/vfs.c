@@ -1,3 +1,5 @@
+#include <linux/kernel.h>
+
 #include <anima/arch.h>
 #include <anima/ksyms.h>
 #include <anima/libc.h>

