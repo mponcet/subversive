@@ -15,11 +15,7 @@ struct syscall_stat sys_stats[NR_SYSCALLS] = { {0} };
 
 void debug_rk(void)
 {
-#if ARCH_X86
-	x86_hw_breakpoint_debug();
-#elif ARCH_ARM
-	arm_hw_breakpoint_debug();
-#endif
+	arch_hw_breakpoint_debug();
 	vfs_debug();
 }
 

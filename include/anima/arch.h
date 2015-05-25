@@ -8,12 +8,20 @@
 #define ARCH_X86 0
 #include <anima/arm.h>
 
+#define arch_hw_breakpoint_init arm_hw_breakpoint_init
+#define arch_hw_breakpoint_exit	arm_hw_breakpoint_exit
+#define arch_hw_breakpoint_debug arm_hw_breakpoint_debug
+
 #elif ARCH_X86
 
 #undef ARCH_X86
 #define ARCH_X86 1
 #define ARCH_ARM 0
 #include <anima/x86.h>
+
+#define arch_hw_breakpoint_init x86_hw_breakpoint_init
+#define arch_hw_breakpoint_exit x86_hw_breakpoint_exit
+#define arch_hw_breakpoint_debug x86_hw_breakpoint_debug
 
 #endif
 
