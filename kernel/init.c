@@ -31,12 +31,12 @@ static int __init anima_init(void)
 	/* MUST be called first */
 	ret = get_kernel_syms();
 	if (ret)
-		return 1;
+		return 0;
 
 	/* architecture specific */
 	ret = arch_hw_breakpoint_init();
 	if (ret)
-		return 1;
+		return 0;
 	arch_hw_breakpoint_debug();
 
 	if (rk_cfg.hook_syscall)
