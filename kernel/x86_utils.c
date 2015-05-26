@@ -5,6 +5,28 @@
 #include <anima/ksyms.h>
 #include <anima/x86.h>
 
+/* find die_chain */
+static unsigned long x86_get_die_chain_addr(void)
+{
+	unsigned long die_chain = 0;
+	unsigned char *ptr;
+
+	ptr = (unsigned char *)get_symbol_addr("unregister_die_notifier");
+	if (!ptr)
+		goto exit;
+
+	for (int i = 0; i < 32; i++) {
+		if (ptr[i] == 0x48 && ptr[i+1] == 0xc7 && ptr[i+2] == 0xc7) {
+			/* mov $die_chain,%rdi */
+			die_chain = *(unsigned int *)&ptr[i+3] | ~0xffffffffUL;
+			break;
+		}
+	}
+exit:
+	return die_chain;
+}
+
+
 /*
  * find {ia32_}sys_call_table addr
  * find "call {ia32_}sys_call_table(,%rax,8)" addr
@@ -38,6 +60,9 @@ static int __get_sycall_addrs(unsigned long base,
 int x86_get_kernel_syms(void)
 {
 	int ret = 0;
+
+	/* die chain */
+	ksyms.die_chain = (void *)x86_get_die_chain_addr();
 
 	/*
 	 * ia32 emulation via sysenter (not used ?)
@@ -80,6 +105,7 @@ exit:
 	pr_debug("%s: ia32_syscall=%lx ia32_syscall_sys_call_table_call=%lx\n",
 		 __func__, ksyms.ia32_syscall, ksyms.ia32_syscall_sys_call_table_call);
 	pr_debug("%s: ia32_sys_call_table=%lx\n", __func__, ksyms.ia32_sys_call_table);
+	pr_debug("%s: die_chain=%p\n", __func__, ksyms.die_chain);
 
 	return ret;
 }

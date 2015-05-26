@@ -43,13 +43,8 @@ int get_kernel_syms(void)
 {
 	unsigned long *sys_call_table;
 
-#if ARCH_X86
-	if (x86_get_kernel_syms())
+	if (arch_get_kernel_syms())
 		return -1;
-#elif ARCH_ARM
-	if (arm_get_kernel_syms())
-		return -1;
-#endif
 
 	sys_call_table = (unsigned long *)ksyms.sys_call_table;
 
@@ -137,9 +132,6 @@ int get_kernel_syms(void)
 		(void *)sys_call_table[__NR_vfork];
 	ksyms.old_sys_reboot =
 		(void *)sys_call_table[__NR_reboot];
-
-	/* kernel data */
-	ksyms.die_chain = (void *)COMPILE_TIME_DIE_CHAIN;
 
 	/* kernel API */
 	ksyms.on_each_cpu = (void *)get_symbol_addr("on_each_cpu");

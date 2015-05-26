@@ -5,6 +5,12 @@
 #include <anima/ksyms.h>
 #include <anima/arm.h>
 
+static unsigned long arm_get_die_chain_addr(void)
+{
+	/* TODO: stub */
+	return 0;
+}
+
 static int __get_sycall_addrs(unsigned long base,
 				 unsigned long *sys_call_table,
 				 unsigned long *sys_call_table_call)
@@ -36,9 +42,14 @@ int arm_get_kernel_syms(void)
 
 	ret = __get_sycall_addrs(ksyms.vector_swi, &ksyms.sys_call_table,
 			   &ksyms.sys_call_table_call);
+
+	ksyms.die_chain = (void *)arm_get_die_chain_addr();
+
 	pr_debug("%s: vector_swi=%lx sys_call_table=%lx sys_call_table_call=%lx\n",
 		 __func__, ksyms.vector_swi,
 		ksyms.sys_call_table, ksyms.sys_call_table_call);
+
+	pr_debug("%s: die_chain=%p\n", __func__, ksyms.die_chain);
 
 	return ret;
 }
