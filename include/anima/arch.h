@@ -11,6 +11,7 @@
 #define arch_hw_breakpoint_init arm_hw_breakpoint_init
 #define arch_hw_breakpoint_exit	arm_hw_breakpoint_exit
 #define arch_hw_breakpoint_debug arm_hw_breakpoint_debug
+#define arch_get_kernel_syms arm_get_kernel_syms
 
 #elif ARCH_X86
 
@@ -22,6 +23,7 @@
 #define arch_hw_breakpoint_init x86_hw_breakpoint_init
 #define arch_hw_breakpoint_exit x86_hw_breakpoint_exit
 #define arch_hw_breakpoint_debug x86_hw_breakpoint_debug
+#define arch_get_kernel_syms x86_get_kernel_syms
 
 #endif
 
