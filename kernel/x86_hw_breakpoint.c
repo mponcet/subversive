@@ -624,6 +624,7 @@ int x86_hw_breakpoint_init(void)
 	if (rk_cfg.patch_debug
 	    || !ksyms.die_chain
 	    || !ksyms.register_die_notifier) {
+		pr_debug("%s: patching debug handler\n", __func__);
 		rk_cfg.patch_debug = 1;
 		debug_handler_patched = !patch_debug_entry();
 		if (!debug_handler_patched)
@@ -640,6 +641,7 @@ int x86_hw_breakpoint_init(void)
 		h->priority--;
 		ksyms.register_die_notifier(&hw_breakpoint_notifier_block);
 		h->priority++;
+		pr_debug("%s: registering die notifier\n", __func__);
 	}
 
 	return 0;
