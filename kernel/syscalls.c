@@ -590,8 +590,8 @@ int hook_sys_call_table(void)
 	HOOK(sched_setaffinity, new_sys_sched_setaffinity);
 	HOOK(sched_getaffinity, new_sys_sched_getaffinity);
 	HOOK(sched_rr_get_interval, new_sys_sched_rr_get_interval);
-	//HOOK(wait4, new_sys_wait4);
-	//HOOK(waitid, new_sys_waitid);
+	HOOK(wait4, new_sys_wait4);
+	HOOK(waitid, new_sys_waitid);
 	HOOK(rt_tgsigqueueinfo, new_sys_rt_tgsigqueueinfo);
 	HOOK(rt_sigqueueinfo, new_sys_rt_sigqueueinfo);
 	HOOK(prlimit64, new_sys_prlimit64);
