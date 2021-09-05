@@ -2,9 +2,7 @@
 #include <linux/kernel.h>
 
 #include <subversive/config.h>
-#include <subversive/debug.h>
 #include <subversive/ksyms.h>
-#include <subversive/libc.h>
 #include <subversive/x86.h>
 
 static struct dr_breakpoint bps;
@@ -590,7 +588,7 @@ void x86_hw_breakpoint_debug(void)
 	__get_dr(7, dr);
 	pr_debug("\tdr7=%lx\n", dr);
 
-	pr_debug("%s: try to set debug registters (dr protect)\n", __func__);
+	pr_debug("%s: trying to set debug registers (dr protect)\n", __func__);
 	dr=0xbadc0ded;
 	pr_debug("\tdr0\n");
 	__set_dr(0, dr);
@@ -609,7 +607,7 @@ void x86_hw_breakpoint_debug(void)
 #include <linux/notifier.h>
 int x86_hw_breakpoint_init(void)
 {
-	subversive_memset(&bps, 0, sizeof(bps));
+	memset(&bps, 0, sizeof(bps));
 
 	/* save debug registers, current cpu */
 	for (int i = 0; i < 4; i++)
@@ -621,11 +619,8 @@ int x86_hw_breakpoint_init(void)
 		 __func__, bps.old_dr[0], bps.old_dr[1], bps.old_dr[2],
 		 bps.old_dr[3], bps.old_dr6, bps.old_dr7);
 
-	if (rk_cfg.patch_debug
-	    || !ksyms.die_chain
-	    || !ksyms.register_die_notifier) {
+	if (CONFIG_PATCH_DEBUG || !ksyms.die_chain || !ksyms.register_die_notifier) {
 		pr_debug("%s: patching debug handler\n", __func__);
-		rk_cfg.patch_debug = 1;
 		debug_handler_patched = !patch_debug_entry();
 		if (!debug_handler_patched)
 			return 1;
@@ -655,7 +650,7 @@ int x86_hw_breakpoint_exit(void)
 	for (int i = 0; i < 4; i++)
 		on_each_cpu_set_dr(i, bps.old_dr[i]);
 
-	if (rk_cfg.patch_debug) {
+	if (CONFIG_PATCH_DEBUG) {
 		if (debug_handler_patched)
 			restore_debug_entry();
 	} else if (ksyms.unregister_die_notifier) {

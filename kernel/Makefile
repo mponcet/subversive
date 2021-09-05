@@ -1,17 +1,7 @@
 obj-m += subversive.o
-subversive-objs := init.o debug.o hide_file.o hide_task.o keylogger.o ksyms.o libc.o syscalls.o vfs.o
+subversive-objs := init.o ksyms.o syscalls.o vfs.o x86_hw_breakpoint.o
 
 EXTRA_CFLAGS = -std=gnu99 -I$(PWD)/../include
-
-ifeq ($(ARCH), arm)
-	subversive-objs += arm_hw_breakpoint.o arm_utils.o
-	EXTRA_CFLAGS += -DARCH_ARM
-endif
-
-ifeq ($(ARCH), x86)
-	subversive-objs += x86_hw_breakpoint.o x86_utils.o
-	EXTRA_CFLAGS += -DARCH_X86
-endif
 
 ifeq ($(DEBUG), 1)
 	EXTRA_CFLAGS += -DDEBUG

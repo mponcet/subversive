@@ -68,8 +68,6 @@ static inline void cr0_wp_enter(void)
 	__write_cr0(cr0);
 }
 
-int x86_get_kernel_syms(void);
-
 struct pt_regs;
 typedef void (*bp_handler)(struct pt_regs *regs);
 
