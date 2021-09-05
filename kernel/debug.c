@@ -1,6 +1,6 @@
-#include <anima/arch.h>
-#include <anima/debug.h>
-#include <anima/vfs.h>
+#include <subversive/arch.h>
+#include <subversive/debug.h>
+#include <subversive/vfs.h>
 
 #ifdef DEBUG
 

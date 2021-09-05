@@ -1,11 +1,11 @@
 #include <linux/kdebug.h>
 #include <linux/kernel.h>
 
-#include <anima/config.h>
-#include <anima/debug.h>
-#include <anima/ksyms.h>
-#include <anima/libc.h>
-#include <anima/x86.h>
+#include <subversive/config.h>
+#include <subversive/debug.h>
+#include <subversive/ksyms.h>
+#include <subversive/libc.h>
+#include <subversive/x86.h>
 
 static struct dr_breakpoint bps;
 
@@ -609,7 +609,7 @@ void x86_hw_breakpoint_debug(void)
 #include <linux/notifier.h>
 int x86_hw_breakpoint_init(void)
 {
-	anima_memset(&bps, 0, sizeof(bps));
+	subversive_memset(&bps, 0, sizeof(bps));
 
 	/* save debug registers, current cpu */
 	for (int i = 0; i < 4; i++)

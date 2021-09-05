@@ -1,7 +1,7 @@
 CFLAGS=-Wall -I../include
 
 all:
-	$(CC) $(CFLAGS) -o anima_ctl anima_ctl.c anima_api.c anima_daemon.c
+	$(CC) $(CFLAGS) -o subversive_ctl subversive_ctl.c subversive_api.c subversive_daemon.c
 
 clean:
-	$(RM) -f anima_ctl
+	$(RM) -f subversive_ctl

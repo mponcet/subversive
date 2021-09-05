@@ -2,7 +2,7 @@
 #define __ARM_H
 
 #include <asm/cacheflush.h>
-#include <anima/libc.h>
+#include <subversive/libc.h>
 
 /* Debug architecture numbers. */
 #define ARM_DEBUG_ARCH_RESERVED 0       /* In case of ptrace ABI updates. */
@@ -72,7 +72,7 @@
 
 static inline void arm_write_hook(void *addr, char *data, unsigned int size)
 {
-	anima_memcpy(addr, data, size);
+	subversive_memcpy(addr, data, size);
 	flush_icache_range((unsigned long)addr, (unsigned long)addr + size);
 }
 

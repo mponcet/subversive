@@ -5,7 +5,7 @@ REVIEW:
 FEATURES:
 * hide file :
 	- hide all /proc/<pid>/<file|dir>
-	- inotify support in anima_ctl daemon
+	- inotify support in subversive_ctl daemon
 * hook sys_open to avoid file integrity check
 * hide connections
 * .so injection

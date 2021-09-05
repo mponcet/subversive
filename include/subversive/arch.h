@@ -6,7 +6,7 @@
 #undef ARCH_ARM
 #define ARCH_ARM 1
 #define ARCH_X86 0
-#include <anima/arm.h>
+#include <subversive/arm.h>
 
 #define arch_hw_breakpoint_init arm_hw_breakpoint_init
 #define arch_hw_breakpoint_exit	arm_hw_breakpoint_exit
@@ -18,7 +18,7 @@
 #undef ARCH_X86
 #define ARCH_X86 1
 #define ARCH_ARM 0
-#include <anima/x86.h>
+#include <subversive/x86.h>
 
 #define arch_hw_breakpoint_init x86_hw_breakpoint_init
 #define arch_hw_breakpoint_exit x86_hw_breakpoint_exit

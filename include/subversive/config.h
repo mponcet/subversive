@@ -7,7 +7,7 @@
 #define MAX_PATH_REDIRECT 32
 #define KEYLOGGER_BUFLEN  2048
 
-struct anima_config {
+struct subversive_config {
 	int state;
 #define RK_BOOT		0
 #define RK_ACTIVE	1
@@ -22,6 +22,6 @@ struct anima_config {
 	int hook_vfs;
 	int keylogger;
 };
-extern struct anima_config rk_cfg;
+extern struct subversive_config rk_cfg;
 
 #endif

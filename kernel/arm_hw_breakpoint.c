@@ -1,6 +1,6 @@
 #include <linux/kernel.h>
 
-#include <anima/ksyms.h>
+#include <subversive/ksyms.h>
 
 #define READ_WB_REG_CASE(OP2, M, VAL)			\
 	case ((OP2 << 4) + M):				\

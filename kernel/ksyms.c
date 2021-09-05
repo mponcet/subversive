@@ -2,10 +2,10 @@
 #include <linux/kallsyms.h>
 #include <asm/unistd.h>
 
-#include <anima/arch.h>
-#include <anima/debug.h>
-#include <anima/ksyms.h>
-#include <anima/libc.h>
+#include <subversive/arch.h>
+#include <subversive/debug.h>
+#include <subversive/ksyms.h>
+#include <subversive/libc.h>
 
 struct kernel_syms ksyms;
 
@@ -20,7 +20,7 @@ static int ksym_lookup(void *data, const char *name,
 	struct ksym_lookup_struct *kls = data;
 
 	kls->addr = 0;
-	if (!anima_strcmp(kls->name, name)) {
+	if (!subversive_strcmp(kls->name, name)) {
 		pr_debug("%s: %s=%lx\n", __func__, name, addr);
 		kls->addr = addr;
 		return 1;

