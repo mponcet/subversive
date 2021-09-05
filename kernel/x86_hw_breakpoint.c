@@ -623,7 +623,7 @@ int x86_hw_breakpoint_init(void)
 		pr_debug("%s: patching debug handler\n", __func__);
 		debug_handler_patched = !patch_debug_entry();
 		if (!debug_handler_patched)
-			return 1;
+			return -1;
 	} else {
 		/*
 		 * We want to be called first in the call chain.
@@ -708,12 +708,14 @@ int x86_hw_breakpoint_unregister(int dr_nr)
  */
 void x86_hw_breakpoint_protect_enable(void)
 {
+	pr_debug("%s: enable DR7_GD\n", __func__);
 	bps.dr7 |= DR7_GD;
 	on_each_cpu_set_dr(7, bps.dr7);
 }
 
 void x86_hw_breakpoint_protect_disable(void)
 {
+	pr_debug("%s: disable DR7_GD\n", __func__);
 	bps.dr7 &= ~DR7_GD;
 	on_each_cpu_set_dr(7, bps.dr7);
 }
