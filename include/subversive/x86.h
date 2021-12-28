@@ -50,7 +50,7 @@ static inline void __write_cr0(unsigned long cr0)
 	asm volatile("mov %0, %%cr0" : : "r" (cr0));
 }
 
-static inline void cr0_wp_exit(void)
+static inline void cr0_wp_enable(void)
 {
 	unsigned long cr0;
 
@@ -59,7 +59,7 @@ static inline void cr0_wp_exit(void)
 	asm volatile("sti");
 }
 
-static inline void cr0_wp_enter(void)
+static inline void cr0_wp_disable(void)
 {
 	unsigned long cr0;
 

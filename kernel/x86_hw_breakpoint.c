@@ -530,9 +530,9 @@ static int patch_debug_entry(void)
 			ksyms.old_do_debug = (void *)(old_rip_off +
 					     (unsigned long)patched_addr) + 4;
 
-			cr0_wp_enter();
+			cr0_wp_disable();
 			*patched_addr = rip_offset;
-			cr0_wp_exit();
+			cr0_wp_enable();
 			return 0;
 
 		} else if (ptr[0] == 0xe8) {
@@ -546,9 +546,9 @@ static int patch_debug_entry(void)
 
 static void restore_debug_entry(void)
 {
-	cr0_wp_enter();
+	cr0_wp_disable();
 	*patched_addr = old_rip_off;
-	cr0_wp_exit();
+	cr0_wp_enable();
 }
 
 
